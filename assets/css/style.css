@@ -230,24 +230,24 @@ a.mini-card:hover { border-color: var(--accent-line); background: var(--card-2);
 .sidebar__tools { display: flex; align-items: center; gap: 4px; }
 
 /* 收起态 */
-body.sidebar-collapsed .sidebar { width: var(--sidebar-w-collapsed); }
-body.sidebar-collapsed .brand__text,
-body.sidebar-collapsed .nav-item__text,
-body.sidebar-collapsed .nav-item__en,
-body.sidebar-collapsed .mini-card__meta { display: none; }
+html.sidebar-collapsed .sidebar { width: var(--sidebar-w-collapsed); }
+html.sidebar-collapsed .brand__text,
+html.sidebar-collapsed .nav-item__text,
+html.sidebar-collapsed .nav-item__en,
+html.sidebar-collapsed .mini-card__meta { display: none; }
 /* 收起时：logo 和「展开」按钮上下排布。
    ★ 这个按钮绝不能隐藏，否则收起之后就再也点不回来了。 */
-body.sidebar-collapsed .sidebar__head {
+html.sidebar-collapsed .sidebar__head {
   flex-direction: column;
   justify-content: center;
   gap: 8px;
   padding-bottom: 12px;
 }
 /* 收起后把图标翻个方向，暗示「点它展开」 */
-body.sidebar-collapsed .sidebar__collapse .ico { transform: rotate(180deg); }
-body.sidebar-collapsed .nav-item { justify-content: center; padding: 11px 0; }
-body.sidebar-collapsed .mini-card { justify-content: center; padding: 6px; }
-body.sidebar-collapsed .sidebar__tools { flex-direction: column; }
+html.sidebar-collapsed .sidebar__collapse .ico { transform: rotate(180deg); }
+html.sidebar-collapsed .nav-item { justify-content: center; padding: 11px 0; }
+html.sidebar-collapsed .mini-card { justify-content: center; padding: 6px; }
+html.sidebar-collapsed .sidebar__tools { flex-direction: column; }
 
 /* 手机端抽屉 */
 .sidebar-backdrop {
@@ -304,7 +304,13 @@ body.sidebar-collapsed .sidebar__tools { flex-direction: column; }
   cursor: pointer;
   transition: all 0.16s var(--ease);
 }
-.icon-btn:hover { color: var(--text); border-color: var(--accent-line); background: var(--card-2); transform: translateY(-1px); }
+.icon-btn:hover { color: var(--accent); border-color: var(--accent-line); transform: scale(1.08); }
+.icon-btn:active {
+  transform: scale(0.94);
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
 .icon-btn--sm { width: 32px; height: 32px; border-radius: 9px; }
 
 .btn {
@@ -319,17 +325,33 @@ body.sidebar-collapsed .sidebar__tools { flex-direction: column; }
   transition: all 0.16s var(--ease);
   white-space: nowrap;
 }
-.btn:hover { color: var(--text); border-color: var(--accent-line); background: var(--card-2); }
+/* 悬停：只放大一点点，不改背景色（避免那种「变黑一块」的突兀感）
+   按下：才变色，给一个明确的点击反馈 */
+.btn:hover { color: var(--text); border-color: var(--accent-line); transform: scale(1.04); }
+.btn:active {
+  transform: scale(0.97);
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
 .btn--primary {
   background: linear-gradient(135deg, var(--accent), var(--accent-2));
   border-color: transparent; color: #150e22; font-weight: 650;
   box-shadow: 0 8px 20px rgba(124, 92, 240, 0.26);
 }
 .btn--primary:hover { filter: brightness(1.07); color: #150e22; }
+.btn--primary:active {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  filter: brightness(0.9);
+  color: #150e22;
+}
 .btn--ghost { background: transparent; }
 .btn--danger:hover { color: #ff8a8a; border-color: rgba(255, 120, 120, 0.4); }
 .btn--block { width: 100%; }
+/* 整行按钮不做缩放，否则放大后会溢出容器边缘（颜色反馈仍然保留） */
+.btn--block:hover, .btn--block:active { transform: none; }
 .btn[disabled] { opacity: 0.45; cursor: not-allowed; }
+.btn[disabled]:hover, .btn[disabled]:active { transform: none; background: var(--card); color: var(--text-2); }
 
 /* ----------------------------------------------------------------- 卡片 */
 .card {
@@ -396,8 +418,10 @@ body.sidebar-collapsed .sidebar__tools { flex-direction: column; }
   font-size: 12.5px; color: var(--muted); font-weight: 560;
   transition: all 0.16s var(--ease);
 }
-.seg button:hover { color: var(--text); }
+.seg button:hover { color: var(--text); transform: scale(1.05); }
+.seg button:active { transform: scale(0.95); color: var(--accent); }
 .seg button.is-active { background: var(--accent); color: #150e22; }
+.seg button.is-active:hover { color: #150e22; }
 
 /* 表单控件 */
 .field { display: flex; flex-direction: column; gap: 6px; }
@@ -746,6 +770,7 @@ input[type='color'] { width: 40px; height: 26px; padding: 0; border: 1px solid v
   transition: transform 0.18s var(--ease);
 }
 .fab:hover { transform: scale(1.07) rotate(6deg); }
+.fab:active { transform: scale(0.94) rotate(0deg); filter: brightness(0.92); }
 
 /* 通用小工具 */
 .muted { color: var(--muted); }
@@ -774,17 +799,17 @@ code { font-family: 'JetBrains Mono', Consolas, monospace; font-size: 12.5px; ba
   body.drawer-open { overflow: hidden; }        /* 抽屉打开时锁住背景滚动 */
 
   /* 抽屉里一律按「展开」的样子显示，不受桌面端收起状态影响 */
-  body.sidebar-collapsed .sidebar { width: var(--sidebar-w) !important; }
-  body.sidebar-collapsed .brand__text,
-  body.sidebar-collapsed .nav-item__text,
-  body.sidebar-collapsed .nav-item__en,
-  body.sidebar-collapsed .mini-card__meta { display: block; }
-  body.sidebar-collapsed .nav-item { justify-content: flex-start; padding: 10px 11px; }
-  body.sidebar-collapsed .sidebar__head {
+  html.sidebar-collapsed .sidebar { width: var(--sidebar-w) !important; }
+  html.sidebar-collapsed .brand__text,
+  html.sidebar-collapsed .nav-item__text,
+  html.sidebar-collapsed .nav-item__en,
+  html.sidebar-collapsed .mini-card__meta { display: block; }
+  html.sidebar-collapsed .nav-item { justify-content: flex-start; padding: 10px 11px; }
+  html.sidebar-collapsed .sidebar__head {
     flex-direction: row; justify-content: space-between; gap: 6px; padding-bottom: 14px;
   }
-  body.sidebar-collapsed .sidebar__tools { flex-direction: row; }
-  body.sidebar-collapsed .mini-card { justify-content: flex-start; padding: 9px; }
+  html.sidebar-collapsed .sidebar__tools { flex-direction: row; }
+  html.sidebar-collapsed .mini-card { justify-content: flex-start; padding: 9px; }
 
   .topbar > .topbar__burger { display: grid; }
   .topbar { padding: 12px 16px; }

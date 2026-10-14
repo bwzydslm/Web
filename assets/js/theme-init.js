@@ -27,4 +27,15 @@
   } catch (e) {
     document.documentElement.dataset.theme = 'dark';
   }
+
+  /* 侧边栏的收起状态也要在第一帧之前恢复。
+     如果等页面底部的 app.js 才加这个类，每次跳页都会先用展开的样子画一帧，
+     再播一遍收起动画 —— 就是你看到的那种「跳一下」的抖动。 */
+  try {
+    const collapsed = JSON.parse(localStorage.getItem('izakaya.ui.sidebarCollapsed') || 'null');
+    const cfgCollapsed = (window.SITE_CONFIG && window.SITE_CONFIG.theme && window.SITE_CONFIG.theme.defaultCollapsed) || false;
+    if ((collapsed === null ? cfgCollapsed : collapsed) === true) {
+      document.documentElement.classList.add('sidebar-collapsed');
+    }
+  } catch (e) {}
 })();

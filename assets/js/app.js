@@ -250,8 +250,8 @@
         if (window.matchMedia('(max-width: 900px)').matches) {
           document.body.classList.remove('drawer-open');
         } else {
-          const next = !document.body.classList.contains('sidebar-collapsed');
-          document.body.classList.toggle('sidebar-collapsed', next);
+          const next = !document.documentElement.classList.contains('sidebar-collapsed');
+          document.documentElement.classList.toggle('sidebar-collapsed', next);
           Store.set('ui.sidebarCollapsed', next);
         }
       });
@@ -301,8 +301,8 @@
           document.body.classList.toggle('drawer-open');
         } else {
           /* 宽屏（正常情况下这个按钮是隐藏的）：直接切换侧栏展开/收起 */
-          const next = !document.body.classList.contains('sidebar-collapsed');
-          document.body.classList.toggle('sidebar-collapsed', next);
+          const next = !document.documentElement.classList.contains('sidebar-collapsed');
+          document.documentElement.classList.toggle('sidebar-collapsed', next);
           Store.set('ui.sidebarCollapsed', next);
         }
       });
@@ -347,7 +347,7 @@
 
     /* 侧边栏默认收起状态（只在本机首次访问时生效） */
     const collapsed = Store.get('ui.sidebarCollapsed', CFG.theme.defaultCollapsed);
-    document.body.classList.toggle('sidebar-collapsed', !!collapsed);
+    document.documentElement.classList.toggle('sidebar-collapsed', !!collapsed);
 
     renderSidebar();
     renderTopbar();
@@ -363,7 +363,7 @@
     document.addEventListener('keydown', function (e) {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
         e.preventDefault();
-        document.body.classList.toggle('sidebar-collapsed');
+        document.documentElement.classList.toggle('sidebar-collapsed');
       }
       if (e.key === 'Escape') document.body.classList.remove('drawer-open');
     });

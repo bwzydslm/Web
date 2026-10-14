@@ -32,7 +32,7 @@
       if (picker) picker.value = v;
     },
     'ui.sidebarCollapsed': function (v) {
-      document.body.classList.toggle('sidebar-collapsed', !!v);
+      document.documentElement.classList.toggle('sidebar-collapsed', !!v);
     },
     'ui.glow': function (v) {
       document.querySelectorAll('.card, .stat, .hero').forEach(function (n) {
