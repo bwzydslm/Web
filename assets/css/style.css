@@ -235,8 +235,16 @@ body.sidebar-collapsed .brand__text,
 body.sidebar-collapsed .nav-item__text,
 body.sidebar-collapsed .nav-item__en,
 body.sidebar-collapsed .mini-card__meta { display: none; }
-body.sidebar-collapsed .sidebar__head { justify-content: center; }
-body.sidebar-collapsed .sidebar__collapse { display: none; }
+/* 收起时：logo 和「展开」按钮上下排布。
+   ★ 这个按钮绝不能隐藏，否则收起之后就再也点不回来了。 */
+body.sidebar-collapsed .sidebar__head {
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  padding-bottom: 12px;
+}
+/* 收起后把图标翻个方向，暗示「点它展开」 */
+body.sidebar-collapsed .sidebar__collapse .ico { transform: rotate(180deg); }
 body.sidebar-collapsed .nav-item { justify-content: center; padding: 11px 0; }
 body.sidebar-collapsed .mini-card { justify-content: center; padding: 6px; }
 body.sidebar-collapsed .sidebar__tools { flex-direction: column; }
@@ -264,7 +272,9 @@ body.sidebar-collapsed .sidebar__tools { flex-direction: column; }
 .page-title { font-size: 21px; font-weight: 650; letter-spacing: 0.01em; }
 .page-desc { font-size: 12.5px; color: var(--muted); margin-top: 1px; }
 .topbar__right { display: flex; align-items: center; gap: 8px; }
-.topbar__burger { display: none; }
+/* ★ 用 .topbar > 提高一级优先级，否则会被后面 .icon-btn 的 display:grid 盖掉，
+      导致这个按钮在宽屏桌面端也一直显示（点了又没效果）。 */
+.topbar > .topbar__burger { display: none; }
 
 .search {
   display: flex; align-items: center; gap: 8px;
@@ -761,10 +771,22 @@ code { font-family: 'JetBrains Mono', Consolas, monospace; font-size: 12.5px; ba
   }
   body.drawer-open .sidebar { transform: translateX(0); }
   body.drawer-open .sidebar-backdrop { opacity: 1; visibility: visible; }
+  body.drawer-open { overflow: hidden; }        /* 抽屉打开时锁住背景滚动 */
+
+  /* 抽屉里一律按「展开」的样子显示，不受桌面端收起状态影响 */
+  body.sidebar-collapsed .sidebar { width: var(--sidebar-w) !important; }
   body.sidebar-collapsed .brand__text,
   body.sidebar-collapsed .nav-item__text,
+  body.sidebar-collapsed .nav-item__en,
   body.sidebar-collapsed .mini-card__meta { display: block; }
-  .topbar__burger { display: grid; }
+  body.sidebar-collapsed .nav-item { justify-content: flex-start; padding: 10px 11px; }
+  body.sidebar-collapsed .sidebar__head {
+    flex-direction: row; justify-content: space-between; gap: 6px; padding-bottom: 14px;
+  }
+  body.sidebar-collapsed .sidebar__tools { flex-direction: row; }
+  body.sidebar-collapsed .mini-card { justify-content: flex-start; padding: 9px; }
+
+  .topbar > .topbar__burger { display: grid; }
   .topbar { padding: 12px 16px; }
   .content { padding: 4px 16px 32px; }
   .footer { padding: 14px 16px 20px; }

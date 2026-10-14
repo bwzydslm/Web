@@ -296,7 +296,15 @@
     const burger = document.getElementById('burgerBtn');
     if (burger) {
       burger.addEventListener('click', function () {
-        document.body.classList.toggle('drawer-open');
+        if (window.matchMedia('(max-width: 900px)').matches) {
+          /* 窄屏：滑出抽屉 */
+          document.body.classList.toggle('drawer-open');
+        } else {
+          /* 宽屏（正常情况下这个按钮是隐藏的）：直接切换侧栏展开/收起 */
+          const next = !document.body.classList.contains('sidebar-collapsed');
+          document.body.classList.toggle('sidebar-collapsed', next);
+          Store.set('ui.sidebarCollapsed', next);
+        }
       });
     }
     const backdrop = document.getElementById('sidebarBackdrop');
