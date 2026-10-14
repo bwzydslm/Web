@@ -1,0 +1,14 @@
+# Cloudflare Pages 重定向 / 重写规则
+# 一头一条，格式：来源 目标 [状态码]
+# 文档：https://developers.cloudflare.com/pages/configuration/redirects/
+
+# 访问 / 直接进首页（其实 Cloudflare 默认就会找 index.html，这行只是保险）
+/            /index.html            200
+
+# 想给页面起短地址？取消注释即可：
+# /gallery   /wall.html             301
+# /upload    /upload.html           301
+# /settings  /settings.html         301
+
+# SPA 写法（本项目是多页静态站，用不到，需要时再打开）：
+# /*         /index.html            200

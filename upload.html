@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>上传 · 瓜の居酒屋</title>
+  <meta name="description" content="上传图片到个人图墙。">
+  <link rel="icon" href="assets/img/favicon.svg">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="assets/js/site.config.js"></script>
+</head>
+<body data-page="upload" data-title="上传" data-desc="把新图片放进图墙">
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <div class="main">
+      <header class="topbar" id="topbar"></header>
+
+      <main class="content">
+        <div class="upload-layout">
+
+          <!-- ========================================================
+               左栏：拖拽区 + 待上传列表
+               ======================================================== -->
+          <div>
+            <section class="card">
+              <div class="card__head">
+                <span class="card__title">选择图片</span>
+                <span class="card__hint">支持拖拽 · 可多选</span>
+              </div>
+              <div class="card__body">
+                <!-- ▼ 拖拽 / 点击选择区域 ▼ -->
+                <div class="dropzone" id="dropzone">
+                  <div class="dropzone__ico">⬆</div>
+                  <div class="dropzone__title">把图片拖到这里，或点击选择文件</div>
+                  <div class="dropzone__hint">PNG / JPG / WebP / GIF，建议单张不超过 5MB</div>
+                  <input type="file" id="fileInput" accept="image/*" multiple hidden>
+                </div>
+
+                <div class="inline" style="margin-top:14px">
+                  <button class="btn" type="button" id="pickBtn">选择文件</button>
+                  <button class="btn btn--ghost" type="button" id="clearQueueBtn">清空列表</button>
+                  <span class="muted" id="queueCount">未选择文件</span>
+                </div>
+              </div>
+            </section>
+
+            <!-- 待上传 / 上传中列表 -->
+            <section class="card">
+              <div class="card__head">
+                <span class="card__title">上传队列</span>
+                <span class="card__hint" id="queueHint">0 个文件</span>
+              </div>
+              <div class="card__body card__body--flush">
+                <div class="filelist" id="fileList">
+                  <div class="fileitem">
+                    <div class="fileitem__thumb"></div>
+                    <div class="fileitem__main">
+                      <div class="fileitem__name muted">还没有选择文件</div>
+                      <div class="fileitem__sub">选好文件后会出现在这里，并显示每个文件的上传进度条</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- 上传按钮 -->
+            <div class="inline" style="margin-top:16px">
+              <button class="btn btn--primary" type="button" id="startUploadBtn">开始上传</button>
+              <span class="muted" id="uploadState">等待中…</span>
+            </div>
+
+            <!-- ========================================================
+                 重要说明（看完可以删掉这段）
+                 Cloudflare Pages 只能托管静态文件，不能接收上传。
+                 真想让「上传」生效，有三种常见做法：
+                   1) 图片放仓库：本地选好图 → 提交到 GitHub 的 assets/img/ → 自动部署
+                   2) 图床 / 对象存储：Cloudflare R2、S3、SM.MS 等，把地址填到
+                      site.config.js 的 api.uploadEndpoint
+                   3) Cloudflare Pages Functions + R2：仓库里建 functions/upload.js
+                 现在这个按钮只是占位：选完文件会显示预览，但不会真的发送。
+                 ======================================================== -->
+            <p class="muted" style="margin-top:12px;font-size:12px">
+              提示：本站是纯静态托管，<b>上传按钮默认只做本地预览</b>。要真正上传，请见
+              <code>README.md</code> 的「让上传真正生效」一节。
+            </p>
+          </div>
+
+          <!-- ========================================================
+               右栏：图片信息表单
+               ======================================================== -->
+          <div>
+            <section class="card">
+              <div class="card__head"><span class="card__title">图片信息</span></div>
+              <div class="card__body stack">
+                <label class="field">
+                  <span class="field__label">标题</span>
+                  <input class="input" id="metaTitle" type="text" placeholder="给这组图片起个名字">
+                </label>
+
+                <label class="field">
+                  <span class="field__label">标签（用英文逗号分隔）</span>
+                  <input class="input" id="metaTags" type="text" placeholder="日常, 风景, 2026">
+                </label>
+
+                <label class="field">
+                  <span class="field__label">描述</span>
+                  <textarea class="textarea" id="metaDesc" placeholder="想说的话、拍摄地点、心情……"></textarea>
+                </label>
+
+                <label class="field">
+                  <span class="field__label">相册 / 分类</span>
+                  <select class="select" id="metaAlbum">
+                    <option>未分类</option>
+                    <option>日常</option>
+                    <option>风景</option>
+                    <option>截图</option>
+                    <option>其他</option>
+                  </select>
+                </label>
+              </div>
+            </section>
+
+            <section class="card">
+              <div class="card__head"><span class="card__title">发布选项</span></div>
+              <div class="row">
+                <div class="row__main">
+                  <div class="row__label">公开可见</div>
+                  <div class="row__desc">关闭后只在「设置 → 私密」里能看到</div>
+                </div>
+                <div class="row__ctrl">
+                  <label class="switch"><input type="checkbox" checked><span class="switch__track"></span></label>
+                </div>
+              </div>
+              <div class="row">
+                <div class="row__main">
+                  <div class="row__label">加入「最近更新」</div>
+                  <div class="row__desc">上传后是否出现在首页</div>
+                </div>
+                <div class="row__ctrl">
+                  <label class="switch"><input type="checkbox" checked><span class="switch__track"></span></label>
+                </div>
+              </div>
+              <div class="row">
+                <div class="row__main">
+                  <div class="row__label">压缩质量</div>
+                  <div class="row__desc">越高越清晰，文件也越大</div>
+                </div>
+                <div class="row__ctrl">
+                  <input type="range" min="1" max="100" value="82" id="qualityRange">
+                  <span class="muted" id="qualityValue">82</span>
+                </div>
+              </div>
+            </section>
+
+            <section class="card">
+              <div class="card__head"><span class="card__title">快捷操作</span></div>
+              <div class="card__body stack">
+                <button class="btn btn--block" type="button" id="exportFormBtn">导出这份信息（JSON）</button>
+                <a class="btn btn--block" href="wall.html">前往图墙查看</a>
+                <a class="btn btn--block" href="settings.html">调整站点设置</a>
+              </div>
+            </section>
+          </div>
+        </div>
+      </main>
+
+      <footer class="footer" id="footer"></footer>
+    </div>
+  </div>
+
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/page-upload.js"></script>
+</body>
+</html>

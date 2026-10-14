@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>首页 · 不知道叫什么</title>
+  <meta name="description" content="个人主页：图片墙、上传与设置，一个安静的私人空间。">
+  <link rel="icon" href="assets/img/favicon.svg">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="assets/js/site.config.js"></script>
+</head>
+
+<!-- data-page 决定左侧哪个导航高亮；data-title / data-desc 是顶栏标题 -->
+<body data-page="home" data-title="首页" data-desc="欢迎回来">
+
+  <div class="layout">
+    <!-- 侧边栏内容由 app.js 自动渲染，不用手写 -->
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <div class="main">
+      <header class="topbar" id="topbar"></header>
+
+      <main class="content">
+
+        <!-- ============================================================
+             ▼▼▼ 主视觉区：改 index.html 这里，或改 site.config.js 的 home 段 ▼▼▼
+             ============================================================ -->
+        <section class="hero">
+          <h2 class="hero__title" id="heroTitle">这里是你的个人空间</h2>
+          <p class="hero__text" id="heroText">
+            放图片、记心情、随手写点什么。左侧四个入口就是全部功能，其余空白留给你自己填。
+          </p>
+          <div class="hero__actions">
+            <a class="btn btn--primary" href="wall.html">去看图墙</a>
+            <a class="btn" href="upload.html">上传新图片</a>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             ▼▼▼ 数据统计：数字由 assets/js/page-home.js 读取并填充 ▼▼▼
+             ============================================================ -->
+        <h3 class="section-title">概览</h3>
+        <section class="grid grid--stats" id="statsGrid">
+          <div class="stat"><div class="stat__label">图片总数</div><div class="stat__value">0<span class="stat__unit">张</span></div></div>
+          <div class="stat"><div class="stat__label">占用空间</div><div class="stat__value">0<span class="stat__unit">MB</span></div></div>
+          <div class="stat"><div class="stat__label">最近更新</div><div class="stat__value">—</div></div>
+        </section>
+
+        <!-- ============================================================
+             ▼▼▼ 快捷入口 ▼▼▼
+             ============================================================ -->
+        <h3 class="section-title">快捷入口</h3>
+        <section class="grid grid--3" id="quickLinks">
+          <a class="quick" href="wall.html"><span class="quick__ico">🖼</span><span><span class="quick__label">图墙</span><br><span class="quick__sub">浏览全部图片</span></span></a>
+          <a class="quick" href="upload.html"><span class="quick__ico">⬆</span><span><span class="quick__label">上传</span><br><span class="quick__sub">添加新图片</span></span></a>
+          <a class="quick" href="settings.html"><span class="quick__ico">⚙</span><span><span class="quick__label">设置</span><br><span class="quick__sub">个性化你的站点</span></span></a>
+        </section>
+
+        <!-- ============================================================
+             ▼▼▼ 自由内容区：想放什么就放什么（日记、歌单、友链…） ▼▼▼
+             现成的空卡片就摆在这，直接往里写内容即可。
+             ============================================================ -->
+        <h3 class="section-title">最近更新</h3>
+        <div class="grid grid--2">
+          <article class="card">
+            <div class="card__head">
+              <span class="card__title">最新图片</span>
+              <a class="card__hint" href="wall.html">查看全部 →</a>
+            </div>
+            <div class="card__body">
+              <!-- 由 page-home.js 填充；没有图片时显示下面的占位 -->
+              <div class="placeholder" id="recentPlaceholder">
+                <div class="placeholder__title">这里还空着</div>
+                <div>去「上传」页添加第一张图片，或者直接把这段换成你自己的内容。</div>
+              </div>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card__head"><span class="card__title">随手记 / 公告</span></div>
+            <div class="card__body">
+              <!-- ▼ 在这里写你的文字 ▼ -->
+              <p class="muted">
+                这是一个留白的卡片。你可以把它改成「关于我」「近况」「正在做的事」……
+                只要保留 <code>card</code> 这套类名，样式会自动跟着走。
+              </p>
+              <div class="inline" style="margin-top:14px">
+                <span class="tag tag--accent">标签示例</span>
+                <span class="tag">相册</span>
+                <span class="tag">日常</span>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <!-- ============================================================
+             ▼▼▼ 想做双栏三栏？复制 .grid.grid--3 里的卡片就行 ▼▼▼
+             ============================================================ -->
+
+      </main>
+
+      <footer class="footer" id="footer"></footer>
+    </div>
+  </div>
+
+  <!-- 右下角浮动按钮（想删就直接删掉这一行） -->
+  <button class="fab" type="button" title="回到顶部" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/page-home.js"></script>
+</body>
+</html>
