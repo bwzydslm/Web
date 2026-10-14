@@ -52,6 +52,30 @@
         .join('');
     }
 
+    /* ---------- 3.5 后端可用时，用云端统计覆盖上面的本地统计 ---------- */
+    (async function () {
+      if (!window.Api) return;
+      const grid2 = document.getElementById('statsGrid');
+      if (!grid2) return;
+      try {
+        const res = await Api.list({ limit: 1, sort: 'new' });
+        const mb = ((res.bytes || 0) / 1024 / 1024).toFixed(1);
+        const latest =
+          res.items && res.items.length
+            ? new Date(res.items[0].ts).toLocaleDateString('zh-CN')
+            : '—';
+        grid2.innerHTML =
+          '<div class="stat"><div class="stat__label">图片总数</div>' +
+          '<div class="stat__value">' + (res.total || 0) + '<span class="stat__unit">张</span></div></div>' +
+          '<div class="stat"><div class="stat__label">占用空间</div>' +
+          '<div class="stat__value">' + mb + '<span class="stat__unit">MB</span></div></div>' +
+          '<div class="stat"><div class="stat__label">最近更新</div>' +
+          '<div class="stat__value">' + latest + '</div></div>';
+      } catch (e) {
+        /* 后端没配好就保持本地统计，不打扰用户 */
+      }
+    })();
+
     /* ---------- 4. 快捷入口（也可以直接在 HTML 里写死） ---------- */
     const quick = document.getElementById('quickLinks');
     if (quick && home.quickLinks && home.quickLinks.length) {

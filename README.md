@@ -14,12 +14,26 @@
 ├── _redirects            # Cloudflare Pages 重定向规则
 ├── robots.txt            # 爬虫规则（私人站点可改成全禁）
 ├── _check.py             # 可选自检脚本：python _check.py
+├── _routes.json          # 只让 /api/* 走 Functions，静态请求不消耗额度
+├── schema.sql            # D1 建表语句（在 D1 控制台执行一次）
+├── wrangler.toml         # 本地开发用的绑定配置（不影响线上）
 ├── .gitignore
+├── functions/            # ★ 后端 API（Pages Functions，部署后自动生效）
+│   ├── _middleware.js          口令校验 + 统一响应头
+│   └── api/
+│       ├── health.js           体检接口 /api/health
+│       ├── upload.js           上传：文件进 R2、元数据进 D1
+│       ├── images/index.js     列表 / 登记
+│       ├── images/[id].js      单条查询 / 修改 / 删除
+│       ├── file/[[key]].js     从 R2 读图
+│       └── auth/check.js       口令校验
+├── docs/cloudflare-d1-r2.md   # ★ D1 + R2 部署手册
 └── assets/
     ├── css/style.css     # 全部样式，配色变量在最上面
     ├── js/
-    │   ├── site.config.js   ★ 你主要改这个文件：站名、导航、页脚、接口
+    │   ├── site.config.js   ★ 你主要改这个文件：站名、导航、页脚
     │   ├── app.js           公共逻辑：侧边栏 / 顶栏 / 页脚渲染、主题、存储
+    │   ├── api.js           前端访问后端 API 的唯一出口
     │   ├── page-home.js     首页逻辑
     │   ├── page-wall.js     图墙逻辑（DEMO_ITEMS 在这里登记图片）
     │   ├── page-upload.js   上传逻辑
@@ -82,13 +96,18 @@ Pages 项目 → **Custom domains** → **Set up a custom domain** → 输入域
 | 配色、圆角、间距 | `assets/css/style.css` 顶部的 `:root` 变量（也可以直接在设置页改强调色） |
 | 设置页加一条新选项 | 在 `settings.html` 复制一个 `.row`，控件加上 `data-setting="你的键名"` 即可自动存读 |
 
-## 五、让「上传」真正生效
+## 五、让它变成动态站点（D1 + R2）
 
-Cloudflare Pages 只能托管静态文件，**没有后端，接不了上传**。三种做法：
+本仓库已经内置了基于 **Pages Functions + D1 + R2** 的后端：
 
-1. **最简单（推荐给学生）**：本地把图片放进 `assets/img/`，`git push`，站点自动更新。上传页就当预览工具用。
-2. **对象存储 / 图床**：图片传到 Cloudflare R2、S3、SM.MS 等，拿到外链；把地址填进 `site.config.js` 的 `api.uploadEndpoint`，再在 `assets/js/page-upload.js` 里把 `TODO` 那段换成真正的 `fetch`。
-3. **Pages Functions + R2**：在仓库根目录建 `functions/upload.js`，写一个服务端函数接收文件并写进 R2（Pages 会自动把它当 API 路由 `/upload`），前端再把文件 POST 过去。需要开 R2 并配置密钥。
+- **上传**：文件存 R2，元数据（标题 / 标签 / 相册 / 尺寸 / 可见性）存 D1
+- **图墙**：数据来自 `/api/images`，支持搜索、排序、收藏、删除
+- **权限**：写操作靠一个 `SITE_TOKEN` 口令保护，**没配置时一律拒绝**（安全默认值）
+- **兜底**：后端不可用时页面自动回退到浏览器本地数据，不会白屏
+
+部署步骤（面板怎么点、怎么验收、怎么排错）见 → [`docs/cloudflare-d1-r2.md`](docs/cloudflare-d1-r2.md)
+
+不想用后端也完全可以：图片放进 `assets/img/`，在 `assets/js/page-wall.js` 的 `DEMO_ITEMS` 里登记，就是原来的纯静态用法。
 
 ## 六、常用小技巧
 

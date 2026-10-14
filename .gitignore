@@ -6,8 +6,13 @@ desktop.ini
 .idea/
 *.log
 
+# Cloudflare / 本地开发
+.wrangler/
+.dev.vars
+node_modules/
+package-lock.json
+
 # 构建产物（如果以后用框架，取消注释）
-# node_modules/
 # dist/
 # .astro/
 # public/

@@ -101,6 +101,57 @@
       UI.toast('已保存：' + key);
     }
 
+    /* ------------------------------------------- 2.5 服务端 / API 配置 */
+    /* 这三项不走 data-setting，因为要写进 Api 自己的配置里 */
+    const apiBase = document.getElementById('apiBase');
+    const apiToken = document.getElementById('apiToken');
+    const apiStatus = document.getElementById('apiStatusDesc');
+
+    function paintApiStatus() {
+      if (!apiBase || !apiToken) return;
+      const c = Api.conf();
+      apiBase.value = c.base;
+      apiToken.value = c.token;
+      if (apiStatus) {
+        apiStatus.textContent = c.token
+          ? '已填写口令，点「测试连接」确认是否可用'
+          : '还没配置口令：上传、删除等写操作不会生效';
+      }
+    }
+    paintApiStatus();
+
+    const saveBtn = document.getElementById('apiSaveBtn');
+    if (saveBtn) {
+      saveBtn.addEventListener('click', function () {
+        Api.save({ base: apiBase.value.trim(), token: apiToken.value.trim() });
+        UI.toast('已保存服务端配置', 'success');
+        paintApiStatus();
+      });
+    }
+
+    const testBtn = document.getElementById('apiTestBtn');
+    if (testBtn) {
+      testBtn.addEventListener('click', async function () {
+        /* 先按输入框里的当前值试，避免用户忘了点保存 */
+        Api.save({ base: apiBase.value.trim(), token: apiToken.value.trim() });
+        if (apiStatus) apiStatus.textContent = '正在检测…';
+        try {
+          const health = await Api.health();
+          const check = await Api.check();
+          if (apiStatus) {
+            apiStatus.innerHTML =
+              '✅ 后端可用：D1 ' + (health.db === 'ok' ? '正常' : health.db) +
+              ' · R2 ' + (health.bucket === 'ok' ? '正常' : health.bucket) +
+              ' · 口令' + (check.ok ? '正确' : '异常');
+          }
+          UI.toast('连接成功', 'success');
+        } catch (e) {
+          if (apiStatus) apiStatus.textContent = '❌ ' + e.message;
+          UI.toast('连接失败：' + e.message, 'error');
+        }
+      });
+    }
+
     /* ---------------------------------------------------- 3. 颜色预设 */
     document.querySelectorAll('[data-preset]').forEach(function (btn) {
       btn.addEventListener('click', function () {

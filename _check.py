@@ -53,7 +53,7 @@ def strip_js(src: str) -> str:
 
 errors = []
 
-for js in sorted((root / "assets" / "js").glob("*.js")):
+for js in sorted((root / "assets" / "js").glob("*.js")) + sorted((root / "functions").rglob("*.js")):
     code = strip_js(js.read_text(encoding="utf-8"))
     stack, pairs = [], {")": "(", "]": "[", "}": "{"}
     status = "OK"
@@ -77,7 +77,7 @@ pages = {
     "404.html": ["app.js"],
 }
 # 这些 id 由 app.js 在运行时动态插入，不该要求写在 HTML 里
-DYNAMIC = {"themeToggle", "collapseBtn", "burgerBtn", "globalSearch", "recentPlaceholder"}
+DYNAMIC = {"themeToggle", "collapseBtn", "burgerBtn", "globalSearch", "recentPlaceholder", "loadMoreBtn"}
 
 for page, scripts in pages.items():
     html = (root / page).read_text(encoding="utf-8")

@@ -209,6 +209,52 @@
         </section>
 
         <!-- ▼ 数据管理 ─────────────────────────────────────────── -->
+        <!-- ▼ 服务端 / API ─────────────────────────────────────── -->
+        <section class="card">
+          <div class="card__head"><span class="card__title">服务端 / API</span></div>
+
+          <div class="row">
+            <div class="row__main">
+              <div class="row__label">API 地址</div>
+              <div class="row__desc">留空表示与本站同源（推荐）。只有本地调试时才需要填，例如 http://127.0.0.1:8788</div>
+            </div>
+            <div class="row__ctrl" style="min-width:280px">
+              <input class="input" id="apiBase" type="text" placeholder="（留空 = 同源）">
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="row__main">
+              <div class="row__label">站点口令</div>
+              <div class="row__desc">对应云端环境变量 SITE_TOKEN；只保存在这台电脑的浏览器里，不会上传</div>
+            </div>
+            <div class="row__ctrl" style="min-width:280px">
+              <input class="input" id="apiToken" type="password" placeholder="粘贴你的 SITE_TOKEN">
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="row__main">
+              <div class="row__label">连接状态</div>
+              <div class="row__desc" id="apiStatusDesc">还没测试过</div>
+            </div>
+            <div class="row__ctrl">
+              <button class="btn" type="button" id="apiTestBtn">测试连接</button>
+              <button class="btn btn--primary" type="button" id="apiSaveBtn">保存</button>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="row__main">
+              <div class="row__label">后端体检</div>
+              <div class="row__desc">直接打开 <code>/api/health</code> 可以看到 D1、R2、口令的配置情况</div>
+            </div>
+            <div class="row__ctrl">
+              <a class="btn" href="/api/health" target="_blank" rel="noopener">打开 /api/health</a>
+            </div>
+          </div>
+        </section>
+
         <section class="card">
           <div class="card__head"><span class="card__title">数据管理</span></div>
           <div class="card__body">
@@ -234,6 +280,7 @@
   </div>
 
   <script src="assets/js/app.js"></script>
+  <script src="assets/js/api.js"></script>
   <script src="assets/js/page-settings.js"></script>
 </body>
 </html>

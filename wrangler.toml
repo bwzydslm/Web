@@ -1,0 +1,28 @@
+# ============================================================================
+#  wrangler.toml —— 只给「本地开发」用（npx wrangler pages dev）
+#
+#  ★ 故意不写 pages_build_output_dir：
+#    一旦写了这个键，本文件会变成线上配置的唯一来源，面板上的绑定设置
+#    就会被忽略，很容易踩坑。所以线上绑定请在 Cloudflare 面板里配：
+#    Pages 项目 → Settings → Bindings
+#
+#  ★ 这里只影响本地模拟环境。没有 Node 的话这个文件可以直接不管。
+# ============================================================================
+
+name = "web"
+compatibility_date = "2026-01-01"
+
+# D1 数据库绑定（把 database_id 换成你自己的，在 D1 页面能看到）
+[[d1_databases]]
+binding = "DB"
+database_name = "izakaya-db"
+database_id = "在这里填-D1-的-database_id"
+
+# R2 桶绑定
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "izakaya-images"
+
+# 本地开发用的口令。线上不要写在这里，要用面板的环境变量（加密）
+[vars]
+SITE_TOKEN = "local-dev-token"

@@ -19,6 +19,9 @@
       <header class="topbar" id="topbar"></header>
 
       <main class="content">
+        <!-- 当前是「真上传」还是「本地预览」，由 page-upload.js 判断后填写 -->
+        <div class="notice" id="uploadMode" hidden></div>
+
         <div class="upload-layout">
 
           <!-- ========================================================
@@ -73,18 +76,15 @@
             </div>
 
             <!-- ========================================================
-                 重要说明（看完可以删掉这段）
-                 Cloudflare Pages 只能托管静态文件，不能接收上传。
-                 真想让「上传」生效，有三种常见做法：
-                   1) 图片放仓库：本地选好图 → 提交到 GitHub 的 assets/img/ → 自动部署
-                   2) 图床 / 对象存储：Cloudflare R2、S3、SM.MS 等，把地址填到
-                      site.config.js 的 api.uploadEndpoint
-                   3) Cloudflare Pages Functions + R2：仓库里建 functions/upload.js
-                 现在这个按钮只是占位：选完文件会显示预览，但不会真的发送。
+                 上传是怎么工作的
+                   · 设置页填了口令 → POST /api/upload：
+                       文件存进 R2，元数据写进 D1
+                   · 没填口令       → 本地预览模式，只记在浏览器里
+                 详细部署步骤见 docs/cloudflare-d1-r2.md
                  ======================================================== -->
             <p class="muted" style="margin-top:12px;font-size:12px">
-              提示：本站是纯静态托管，<b>上传按钮默认只做本地预览</b>。要真正上传，请见
-              <code>README.md</code> 的「让上传真正生效」一节。
+              提示：要先在「设置 → 服务端 / API」填入与云端一致的 <code>SITE_TOKEN</code>，
+              这里的上传才会真正写进 R2 和 D1。部署步骤见 <code>docs/cloudflare-d1-r2.md</code>。
             </p>
           </div>
 
@@ -131,7 +131,7 @@
                   <div class="row__desc">关闭后只在「设置 → 私密」里能看到</div>
                 </div>
                 <div class="row__ctrl">
-                  <label class="switch"><input type="checkbox" checked><span class="switch__track"></span></label>
+                  <label class="switch"><input type="checkbox" id="visibilityToggle" checked><span class="switch__track"></span></label>
                 </div>
               </div>
               <div class="row">
@@ -172,6 +172,7 @@
   </div>
 
   <script src="assets/js/app.js"></script>
+  <script src="assets/js/api.js"></script>
   <script src="assets/js/page-upload.js"></script>
 </body>
 </html>

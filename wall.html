@@ -24,6 +24,9 @@
              ▼▼▼ 工具栏：筛选、排序、视图切换 ▼▼▼
              逻辑在 assets/js/page-wall.js 里，按你的需求改就行。
              ============================================================ -->
+        <!-- 后端连接状态提示，内容由 page-wall.js 填写 -->
+        <div class="notice" id="wallNotice" hidden></div>
+
         <div class="wall-toolbar">
           <div class="seg" id="filterSeg">
             <button type="button" class="is-active" data-filter="all">全部</button>
@@ -114,6 +117,7 @@
   </div>
 
   <script src="assets/js/app.js"></script>
+  <script src="assets/js/api.js"></script>
   <script src="assets/js/page-wall.js"></script>
 </body>
 </html>
