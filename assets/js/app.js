@@ -151,14 +151,29 @@
   }
   window.UI.hexToRgba = hexToRgba;
 
+  /**
+   * 'auto' = 跟随时间：早 7 点到晚 7 点用浅色，其余时间用深色。
+   * 判断逻辑和 assets/js/theme-init.js 保持一致。
+   */
+  function effectiveMode(mode) {
+    if (mode !== 'auto') return mode === 'light' ? 'light' : 'dark';
+    const h = new Date().getHours();
+    return h >= 7 && h < 19 ? 'light' : 'dark';
+  }
+
   function applyMode(mode) {
-    const m = mode || Store.get('theme.mode', CFG.theme.defaultMode) || 'dark';
+    const pref = mode || Store.get('theme.mode', CFG.theme.defaultMode) || 'dark';
+    const m = effectiveMode(pref);
     root.dataset.theme = m;
+
     const btn = document.getElementById('themeToggle');
     if (btn) {
       btn.innerHTML = icon(m === 'dark' ? 'sun' : 'moon', 17);
-      btn.title = m === 'dark' ? '切换到浅色' : '切换到深色';
+      btn.title =
+        (pref === 'auto' ? '跟随时间 · ' : '') +
+        (m === 'dark' ? '当前深色，点击切换到浅色' : '当前浅色，点击切换到深色');
     }
+    return m;
   }
 
   /* -------------------------------------------------------------- 渲染侧栏 */
@@ -330,6 +345,11 @@
     renderTopbar();
     renderFooter();
     applyMode();
+
+    /* 跟随时间模式：每 10 分钟重算一次，跨过 7:00 / 19:00 会自动切换 */
+    setInterval(function () {
+      if ((Store.get('theme.mode', CFG.theme.defaultMode) || 'dark') === 'auto') applyMode();
+    }, 10 * 60 * 1000);
 
     /* 全局快捷键：Ctrl/Cmd + B 收起侧栏 */
     document.addEventListener('keydown', function (e) {

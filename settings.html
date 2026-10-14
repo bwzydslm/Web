@@ -8,6 +8,7 @@
   <link rel="icon" href="assets/img/favicon.svg">
   <link rel="stylesheet" href="assets/css/style.css">
   <script src="assets/js/site.config.js"></script>
+  <script src="assets/js/theme-init.js"></script>
 </head>
 <body data-page="settings" data-title="设置" data-desc="按你的习惯调整一切">
 
@@ -34,12 +35,13 @@
           <div class="row">
             <div class="row__main">
               <div class="row__label">明暗模式</div>
-              <div class="row__desc">深色更接近参考图；浅色适合白天看</div>
+              <div class="row__desc">深色 = 纯黑底；浅色 = 纯白底；跟随时间会在早 7 点自动转浅色、晚 7 点转深色</div>
             </div>
             <div class="row__ctrl">
               <div class="seg" data-setting="theme.mode" data-type="seg">
                 <button type="button" data-value="dark">深色</button>
                 <button type="button" data-value="light">浅色</button>
+                <button type="button" data-value="auto">跟随时间</button>
               </div>
             </div>
           </div>

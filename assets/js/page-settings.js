@@ -17,9 +17,14 @@
   /* 每条设置的「立即生效」逻辑 */
   const APPLIERS = {
     'theme.mode': function (v) {
-      SiteApp.applyMode(v);
+      const actual = SiteApp.applyMode(v);
       const tag = document.getElementById('curTheme');
-      if (tag) tag.textContent = v === 'dark' ? '深色' : '浅色';
+      if (tag) {
+        tag.textContent =
+          v === 'auto'
+            ? '跟随时间 · 当前' + (actual === 'dark' ? '深色' : '浅色')
+            : v === 'dark' ? '深色' : '浅色';
+      }
     },
     'theme.accent': function (v) {
       SiteApp.applyAccent();
@@ -67,9 +72,11 @@
       }
     });
 
-    /* 主题标签初始化 */
+    /* 主题标签初始化（上面应用 data-setting 时已经写过一次，这里只兜底） */
     const tag = document.getElementById('curTheme');
-    if (tag) tag.textContent = document.documentElement.dataset.theme === 'dark' ? '深色' : '浅色';
+    if (tag && !tag.textContent.trim()) {
+      tag.textContent = document.documentElement.dataset.theme === 'dark' ? '深色' : '浅色';
+    }
     const resetIco = document.getElementById('resetIco');
     if (resetIco) resetIco.innerHTML = window.icon('refresh', 16);
 

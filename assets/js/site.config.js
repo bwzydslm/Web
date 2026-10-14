@@ -7,8 +7,8 @@
 window.SITE_CONFIG = {
   /* ---------- 品牌 / 标题 ---------- */
   brand: {
-    name: '瓜の居酒屋',          // 主标题
-    subtitle: 'URI NO IZAKAYA',  // 副标题（会转成大写小字间距）
+    name: 'Amoyba的小屋',          // 主标题
+    subtitle: '(╹ڡ╹ )',  // 副标题（会转成大写小字间距）
     logo: '🪷',                  // 想用图片就把下面 logoImage 填上，会覆盖这里
     logoImage: '',               // 例如 'assets/img/logo.svg'
     homeUrl: 'index.html',       // 点 logo 去哪
@@ -45,12 +45,12 @@ window.SITE_CONFIG = {
 
   /* ---------- 底部工具条 / 页脚 ---------- */
   footer: {
-    text: '© 2026 瓜の居酒屋',
+    text: '© 2026 Amoyba的小屋',
     note: '配色取自欣吹零香',
     social: [
-      { label: 'GitHub',   icon: 'github',   href: 'https://github.com/' },
+      { label: 'GitHub',   icon: 'github',   href: 'https://github.com/bwzydslm' },
       { label: 'Instagram', icon: 'instagram', href: '#' },
-      { label: 'Bilibili', icon: 'bilibili', href: '#' },
+      { label: 'Bilibili', icon: 'bilibili', href: 'https://space.bilibili.com/1155182580?spm_id_from=333.1007.0.0' },
       { label: '邮箱',     icon: 'mail',     href: 'mailto:you@example.com' },
     ],
   },
@@ -59,7 +59,7 @@ window.SITE_CONFIG = {
   theme: {
     accent: '#a78bfa',   // 主强调色（按钮、开关、选中态）
     accent2: '#7c5cf0',  // 渐变副色
-    defaultMode: 'dark', // 'dark' | 'light'
+    defaultMode: 'auto', // 'dark' | 'light' | 'auto'（auto = 白天浅色、夜晚深色）
     defaultCollapsed: false, // 侧边栏默认是否收起
   },
 
