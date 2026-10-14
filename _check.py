@@ -100,6 +100,15 @@ for page in list(pages):
             errors.append(f"{page}: 引用了不存在的文件 {ref}")
             print(f"  ! {page} -> {ref}")
 
+# CSS 花括号平衡（顺手查一下样式有没有写漏括号）
+css_path = root / "assets" / "css" / "style.css"
+css = re.sub(r"/\*.*?\*/", "", css_path.read_text(encoding="utf-8"), flags=re.S)
+if css.count("{") != css.count("}"):
+    errors.append(f"style.css: 花括号不匹配 {{={css.count('{')} }}={css.count('}')}")
+    print(f"CSS 检查 style.css          FAIL {{={css.count('{')} }}={css.count('}')}")
+else:
+    print(f"CSS 检查 style.css          OK ({css.count('{')} 条规则)")
+
 from html.parser import HTMLParser
 VOID = {"area","base","br","col","embed","hr","img","input","link","meta","source","track","wbr"}
 

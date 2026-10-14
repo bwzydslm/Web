@@ -14,6 +14,14 @@ window.SITE_CONFIG = {
     homeUrl: 'index.html',       // 点 logo 去哪
   },
 
+  /* ---------- 侧边栏底部那张小卡片 ---------- */
+  sidebarCard: {
+    emoji: '✦',
+    title: '关于本站',
+    subtitle: '记录与收藏',
+    href: 'index.html',          // 留空 '' 就变成不可点击的纯展示卡片
+  },
+
   /* ---------- 左侧导航 ---------- */
   /* icon 名字见 assets/js/app.js 里的 ICONS；也可以直接写 emoji，例如 icon: '🖼' */
   nav: [

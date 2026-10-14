@@ -162,6 +162,21 @@
   }
 
   /* -------------------------------------------------------------- 渲染侧栏 */
+
+  /** 侧边栏底部的小卡片，内容读 site.config.js 的 sidebarCard */
+  function sidebarCardHtml() {
+    const c = CFG.sidebarCard || {};
+    const inner =
+      '<div class="mini-card__cover">' + (c.emoji || '✦') + '</div>' +
+      '<div class="mini-card__meta">' +
+        '<div class="mini-card__title">' + (c.title || CFG.brand.name) + '</div>' +
+        '<div class="mini-card__sub">' + (c.subtitle || '') + '</div>' +
+      '</div>';
+    return c.href
+      ? '<a class="mini-card" href="' + c.href + '">' + inner + '</a>'
+      : '<div class="mini-card">' + inner + '</div>';
+  }
+
   function currentPage() {
     return document.body.dataset.page || 'home';
   }
@@ -203,15 +218,9 @@
 
       '<nav class="sidebar__nav">' + navHtml + '</nav>' +
 
-      /* ▼▼ 侧边栏底部插槽：现在放一个「正在播放」卡片占位，你可以整块换成自己的内容 ▼▼ */
+      /* ▼▼ 侧边栏底部插槽：内容来自 site.config.js 的 sidebarCard ▼▼ */
       '<div class="sidebar__slots">' +
-        '<div class="mini-card">' +
-          '<div class="mini-card__cover">♫</div>' +
-          '<div class="mini-card__meta">' +
-            '<div class="mini-card__title">空白插槽</div>' +
-            '<div class="mini-card__sub">在 app.js 里替换</div>' +
-          '</div>' +
-        '</div>' +
+        sidebarCardHtml() +
         '<div class="sidebar__tools">' +
           '<button class="icon-btn" id="themeToggle" type="button"></button>' +
           (CFG.footer.social || []).slice(0, 3).map(function (s) {

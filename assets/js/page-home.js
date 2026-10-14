@@ -34,20 +34,23 @@
 
       const stats = home.stats && home.stats.length
         ? [
-            { label: home.stats[0].label, value: items.length, unit: home.stats[0].unit },
-            { label: home.stats[1].label, value: mb, unit: home.stats[1].unit },
-            { label: home.stats[2].label, value: items.length ? latest : '—', unit: '' },
+            { label: home.stats[0].label, value: items.length, unit: home.stats[0].unit, icon: 'image' },
+            { label: home.stats[1].label, value: mb, unit: home.stats[1].unit, icon: 'grid' },
+            { label: home.stats[2].label, value: items.length ? latest : '暂无', unit: '', icon: 'refresh' },
           ]
         : [
-            { label: '图片总数', value: items.length, unit: '张' },
-            { label: '占用空间', value: mb, unit: 'MB' },
-            { label: '最近更新', value: items.length ? latest : '—', unit: '' },
+            { label: '图片总数', value: items.length, unit: '张', icon: 'image' },
+            { label: '占用空间', value: mb, unit: 'MB', icon: 'grid' },
+            { label: '最近更新', value: items.length ? latest : '暂无', unit: '', icon: 'refresh' },
           ];
 
       grid.innerHTML = stats
         .map(function (s) {
-          return '<div class="stat"><div class="stat__label">' + s.label + '</div>' +
-                 '<div class="stat__value">' + s.value + '<span class="stat__unit">' + (s.unit || '') + '</span></div></div>';
+          return '<div class="stat">' +
+                 '<span class="stat__icon">' + window.icon(s.icon, 17) + '</span>' +
+                 '<div class="stat__label">' + s.label + '</div>' +
+                 '<div class="stat__value">' + s.value +
+                 '<span class="stat__unit">' + (s.unit || '') + '</span></div></div>';
         })
         .join('');
     }
@@ -65,11 +68,14 @@
             ? new Date(res.items[0].ts).toLocaleDateString('zh-CN')
             : '—';
         grid2.innerHTML =
-          '<div class="stat"><div class="stat__label">图片总数</div>' +
+          '<div class="stat"><span class="stat__icon">' + window.icon('image', 17) + '</span>' +
+          '<div class="stat__label">图片总数</div>' +
           '<div class="stat__value">' + (res.total || 0) + '<span class="stat__unit">张</span></div></div>' +
-          '<div class="stat"><div class="stat__label">占用空间</div>' +
+          '<div class="stat"><span class="stat__icon">' + window.icon('grid', 17) + '</span>' +
+          '<div class="stat__label">占用空间</div>' +
           '<div class="stat__value">' + mb + '<span class="stat__unit">MB</span></div></div>' +
-          '<div class="stat"><div class="stat__label">最近更新</div>' +
+          '<div class="stat"><span class="stat__icon">' + window.icon('refresh', 17) + '</span>' +
+          '<div class="stat__label">最近更新</div>' +
           '<div class="stat__value">' + latest + '</div></div>';
       } catch (e) {
         /* 后端没配好就保持本地统计，不打扰用户 */
