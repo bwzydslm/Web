@@ -146,10 +146,12 @@
           const health = await Api.health();
           const check = await Api.check();
           if (apiStatus) {
+            const dbOk = health.db === 'ok';
+            const r2Ok = health.bucket === 'ok';
             apiStatus.innerHTML =
-              '✅ 后端可用：D1 ' + (health.db === 'ok' ? '正常' : health.db) +
-              ' · R2 ' + (health.bucket === 'ok' ? '正常' : health.bucket) +
-              ' · 口令' + (check.ok ? '正确' : '异常');
+              '✅ 后端可达 —— D1：' + (dbOk ? '正常' : '⚠ ' + health.db) +
+              ' · R2：' + (r2Ok ? '正常' : '未配置（随手记等文本板块不需要它）') +
+              ' · 口令：' + (check.ok ? '正确' : '异常');
           }
           UI.toast('连接成功', 'success');
         } catch (e) {

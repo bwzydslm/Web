@@ -12,13 +12,13 @@
 name = "web"
 compatibility_date = "2026-01-01"
 
-# D1 数据库绑定（把 database_id 换成你自己的，在 D1 页面能看到）
+# D1 数据库绑定（线上请在 Cloudflare 面板配置，这里只给本地开发用）
 [[d1_databases]]
 binding = "DB"
-database_name = "izakaya-db"
-database_id = "在这里填-D1-的-database_id"
+database_name = "db"
+database_id = "dad30ebc-6093-44ff-bfbf-74e5c4bb3c94"
 
-# R2 桶绑定
+# R2 桶绑定（暂时没开通 R2 就先留着，本地开发会用一个空的模拟桶）
 [[r2_buckets]]
 binding = "BUCKET"
 bucket_name = "izakaya-images"
