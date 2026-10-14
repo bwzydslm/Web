@@ -27,3 +27,16 @@ CREATE INDEX IF NOT EXISTS idx_images_fav     ON images (fav);
 
 -- 想确认建好了没有：
 -- SELECT name FROM sqlite_master WHERE type = 'table';
+
+-- ============================================================================
+--  小文本板块：随手记 / 公告 ……（可以在网站上直接编辑的内容）
+--  用 note_key 区分不同板块，例如 notice、about、links
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS notes (
+  note_key   TEXT    PRIMARY KEY,
+  title      TEXT    NOT NULL DEFAULT '',
+  body       TEXT    NOT NULL DEFAULT '',   -- 多段文字用 \n 分隔
+  tags       TEXT    NOT NULL DEFAULT '',   -- 逗号分隔
+  updated_at INTEGER NOT NULL
+);

@@ -77,7 +77,8 @@ pages = {
     "404.html": ["app.js"],
 }
 # 这些 id 由 app.js 在运行时动态插入，不该要求写在 HTML 里
-DYNAMIC = {"themeToggle", "collapseBtn", "burgerBtn", "globalSearch", "recentPlaceholder", "loadMoreBtn"}
+DYNAMIC = {"themeToggle", "collapseBtn", "burgerBtn", "globalSearch", "recentPlaceholder", "loadMoreBtn",
+           "noticeInputTitle", "noticeInputBody", "noticeInputTags", "noticeStatus", "noticeSaveBtn", "noticeCancelBtn"}
 
 for page, scripts in pages.items():
     html = (root / page).read_text(encoding="utf-8")

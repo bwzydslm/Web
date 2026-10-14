@@ -9,7 +9,7 @@ window.SITE_CONFIG = {
   brand: {
     name: 'Amoyba的小屋',          // 主标题
     subtitle: '(╹ڡ╹ )',  // 副标题（会转成大写小字间距）
-    logo: '🪷',                  // 想用图片就把下面 logoImage 填上，会覆盖这里
+    logo: '🍟',                  // 想用图片就把下面 logoImage 填上，会覆盖这里
     logoImage: '',               // 例如 'assets/img/logo.svg'
     homeUrl: 'index.html',       // 点 logo 去哪
   },
@@ -46,7 +46,7 @@ window.SITE_CONFIG = {
   /* ---------- 底部工具条 / 页脚 ---------- */
   footer: {
     text: '© 2026 Amoyba的小屋',
-    note: '配色取自欣吹零香',
+    note: '奇思妙想，天马行空的产物',
     social: [
       { label: 'GitHub',   icon: 'github',   href: 'https://github.com/bwzydslm' },
       { label: 'Instagram', icon: 'instagram', href: '#' },
@@ -75,8 +75,8 @@ window.SITE_CONFIG = {
 
   /* ---------- 首页可编辑的小文案 ---------- */
   home: {
-    heroTitle: '这里是你的个人空间',
-    heroText: '放图片、记心情、随手写点什么。左侧四个入口就是全部功能，其余空白留给你自己填。',
+    heroTitle: '这里是Bw_slime的个人空间',
+    heroText: '你好 陌生人 很高兴你能访问我的web 你可以看看图片，听听音乐，希望你能在我的小世界玩得开心',
     stats: [
       { label: '图片总数', value: '0', unit: '张' },
       { label: '占用空间', value: '0', unit: 'MB' },
@@ -87,5 +87,19 @@ window.SITE_CONFIG = {
       { label: '上传新图片', href: 'upload.html', icon: 'upload' },
       { label: '调整设置', href: 'settings.html', icon: 'settings' },
     ],
+
+    /* ---------- 随手记 / 公告 ----------
+     * 这里只是「默认文案」：一旦你在网站上点「编辑」保存过，
+     * 内容就会存到 D1 数据库，以云端那份为准（本机没配口令时存浏览器本地）。
+     */
+    editable: true,          // true = 谁都能看到编辑键（方便你现在就试）；'owner' = 只有配了口令的浏览器能看到；false = 不显示
+    notice: {
+      title: '随手记 / 公告',
+      lines: [
+        '这是一个留白的卡片。你可以把它改成「关于我」「近况」「正在做的事」……',
+        '配好 D1 之后，直接点右上角「编辑」就能在线改这段文字。',
+      ],
+      tags: ['标签示例', '相册', '日常'],
+    },
   },
 };

@@ -348,6 +348,8 @@ html.sidebar-collapsed .sidebar__tools { flex-direction: column; }
 .btn--ghost { background: transparent; }
 .btn--danger:hover { color: #ff8a8a; border-color: rgba(255, 120, 120, 0.4); }
 .btn--block { width: 100%; }
+/* 小号按钮，用在卡片右上角这种地方（比如「随手记」卡片的编辑键） */
+.btn--sm { height: 30px; padding: 0 12px; font-size: 12.5px; border-radius: 9px; }
 /* 整行按钮不做缩放，否则放大后会溢出容器边缘（颜色反馈仍然保留） */
 .btn--block:hover, .btn--block:active { transform: none; }
 .btn[disabled] { opacity: 0.45; cursor: not-allowed; }

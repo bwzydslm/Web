@@ -160,5 +160,16 @@ window.Api = (function () {
       return req('/api/images/' + encodeURIComponent(id), { method: 'DELETE' });
     },
     upload: upload,
+
+    /* 小文本板块（随手记 / 公告）：读公开，写需要口令 */
+    note: function (key) {
+      return req('/api/notes/' + encodeURIComponent(key));
+    },
+    saveNote: function (key, data) {
+      return req('/api/notes/' + encodeURIComponent(key), { method: 'PUT', body: data });
+    },
+    removeNote: function (key) {
+      return req('/api/notes/' + encodeURIComponent(key), { method: 'DELETE' });
+    },
   };
 })();

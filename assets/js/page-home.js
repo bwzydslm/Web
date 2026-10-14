@@ -110,7 +110,164 @@
         '</div>';
     }
 
-    /* ---------- 6. 滚动位置记忆（可在设置里关闭） ---------- */
+    /* ---------- 6. 随手记 / 公告：可以直接在网站上编辑 ------------------
+     * 读取优先级：云端 D1 → 本机浏览器 → site.config.js 的 home.notice
+     * 保存：配了后端口令就写进 D1（所有访客都能看到），否则存本机浏览器。
+     * ------------------------------------------------------------------ */
+    (function noticeBoard() {
+      const KEY = 'notice';
+      const titleEl = document.getElementById('noticeTitle');
+      const bodyEl = document.getElementById('noticeBody');
+      const editBtn = document.getElementById('noticeEditBtn');
+      if (!bodyEl) return;
+
+      /* editable 三种取值：true 谁都能看到编辑键 / 'owner' 只有配了口令的浏览器能看到 / false 不显示 */
+      const editable = home ? home.editable : true;
+
+      function esc(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+      }
+
+      function fromConfig() {
+        const n = home && home.notice;
+        if (!n) return null;
+        return { title: n.title, body: (n.lines || []).join('\n'), tags: n.tags || [] };
+      }
+
+      function fromLocal() {
+        const n = Store.get('notice', null);
+        if (!n) return null;
+        return { title: n.title, body: n.body, tags: n.tags || [] };
+      }
+
+      function render(note, source) {
+        if (titleEl) titleEl.textContent = (note && note.title) || '随手记 / 公告';
+
+        if (!note) {
+          bodyEl.innerHTML = '<p class="muted">还没有内容，点右上角「编辑」写点什么吧。</p>';
+          return;
+        }
+
+        const paragraphs = String(note.body || '')
+          .split('\n')
+          .map(function (line) { return line.trim(); })
+          .filter(Boolean)
+          .map(function (line) { return '<p class="muted">' + esc(line) + '</p>'; })
+          .join('');
+
+        const tags = (note.tags || [])
+          .map(function (t, i) {
+            return '<span class="tag' + (i === 0 ? ' tag--accent' : '') + '">' + esc(t) + '</span>';
+          })
+          .join('');
+
+        const srcText =
+          source === 'cloud' ? '内容来自云端数据库'
+          : source === 'local' ? '内容只存在这台电脑的浏览器里'
+          : '内容来自 site.config.js';
+
+        bodyEl.innerHTML =
+          (paragraphs || '<p class="muted">（正文是空的）</p>') +
+          (tags ? '<div class="inline" style="margin-top:14px">' + tags + '</div>' : '') +
+          '<p class="muted" style="margin-top:14px;font-size:11.5px">' + srcText + '</p>';
+      }
+
+      function load() {
+        const cloud = window.Api
+          ? Api.note(KEY).then(function (res) {
+              if (res && res.note && res.note.body) return { note: res.note, source: 'cloud' };
+              return null;
+            }).catch(function () { return null; })
+          : Promise.resolve(null);
+
+        return cloud.then(function (hit) {
+          if (hit) return hit;
+          const local = fromLocal();
+          if (local) return { note: local, source: 'local' };
+          const cfg = fromConfig();
+          if (cfg) return { note: cfg, source: 'config' };
+          return { note: null, source: 'none' };
+        });
+      }
+
+      function openEditor(note) {
+        note = note || {};
+        const canCloud = window.Api && Api.isConfigured();
+
+        bodyEl.innerHTML =
+          '<div class="stack">' +
+            '<label class="field"><span class="field__label">标题</span>' +
+              '<input class="input" id="noticeInputTitle" type="text" maxlength="50"></label>' +
+            '<label class="field"><span class="field__label">正文（一行一段）</span>' +
+              '<textarea class="textarea" id="noticeInputBody" style="min-height:150px"></textarea></label>' +
+            '<label class="field"><span class="field__label">标签（英文逗号分隔）</span>' +
+              '<input class="input" id="noticeInputTags" type="text"></label>' +
+          '</div>' +
+          '<div class="inline" style="margin-top:14px">' +
+            '<button class="btn btn--primary" type="button" id="noticeSaveBtn">保存</button>' +
+            '<button class="btn" type="button" id="noticeCancelBtn">取消</button>' +
+            '<span class="muted" id="noticeStatus"></span>' +
+          '</div>';
+
+        document.getElementById('noticeInputTitle').value = note.title || '';
+        document.getElementById('noticeInputBody').value = note.body || '';
+        document.getElementById('noticeInputTags').value = (note.tags || []).join(', ');
+
+        const status = document.getElementById('noticeStatus');
+        status.textContent = canCloud
+          ? '保存后会写进云端，所有访客都能看到'
+          : '未配置后端口令，只能先存在本机浏览器';
+
+        document.getElementById('noticeCancelBtn').addEventListener('click', refresh);
+
+        const saveBtn = document.getElementById('noticeSaveBtn');
+        saveBtn.addEventListener('click', async function () {
+          const data = {
+            title: document.getElementById('noticeInputTitle').value.trim(),
+            body: document.getElementById('noticeInputBody').value.replace(/\r\n/g, '\n'),
+            tags: document.getElementById('noticeInputTags').value
+              .split(/[,，]/).map(function (s) { return s.trim(); }).filter(Boolean),
+          };
+
+          saveBtn.disabled = true;
+          status.textContent = '保存中…';
+
+          if (canCloud) {
+            try {
+              await Api.saveNote(KEY, data);
+              UI.toast('已保存到云端', 'success');
+              refresh();
+              return;
+            } catch (e) {
+              status.textContent = '❌ 保存失败：' + e.message;
+              saveBtn.disabled = false;
+              return;
+            }
+          }
+
+          Store.set('notice', data);
+          UI.toast('已保存在本机浏览器', 'info');
+          refresh();
+        });
+      }
+
+      function refresh() {
+        return load().then(function (res) {
+          render(res.note, res.source);
+          if (editBtn) {
+            const show = editable === 'owner' ? !!(window.Api && Api.isConfigured()) : !!editable;
+            editBtn.hidden = !show;
+            editBtn.onclick = function () { openEditor(res.note); };
+          }
+        });
+      }
+
+      refresh();
+    })();
+
+    /* ---------- 7. 滚动位置记忆（可在设置里关闭） ---------- */
     if (Store.get('ui.rememberScroll', false)) {
       const y = Store.get('ui.scrollY', 0);
       if (y) window.scrollTo(0, y);

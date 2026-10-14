@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>首页 · 不知道叫什么</title>
+  <title>啊巴啊巴(～o￣3￣)～</title>
   <meta name="description" content="个人主页：图片墙、上传与设置，一个安静的私人空间。">
   <link rel="icon" href="assets/img/favicon.svg">
   <link rel="stylesheet" href="assets/css/style.css">
@@ -98,19 +98,16 @@
             </div>
           </article>
 
+          <!-- 随手记 / 公告
+               内容由 page-home.js 渲染，优先级：云端(D1) → 本机浏览器 → site.config.js 的 home.notice
+               点右上角「编辑」可直接在网站上改（先在设置页填后端口令才能存到云端） -->
           <article class="card">
-            <div class="card__head"><span class="card__title">随手记 / 公告</span></div>
-            <div class="card__body">
-              <!-- ▼ 在这里写你的文字 ▼ -->
-              <p class="muted">
-                这是一个留白的卡片。你可以把它改成「关于我」「近况」「正在做的事」……
-                只要保留 <code>card</code> 这套类名，样式会自动跟着走。
-              </p>
-              <div class="inline" style="margin-top:14px">
-                <span class="tag tag--accent">标签示例</span>
-                <span class="tag">相册</span>
-                <span class="tag">日常</span>
-              </div>
+            <div class="card__head">
+              <span class="card__title" id="noticeTitle">随手记 / 公告</span>
+              <button class="btn btn--ghost btn--sm" type="button" id="noticeEditBtn" hidden>编辑</button>
+            </div>
+            <div class="card__body" id="noticeBody">
+              <p class="muted">正在加载…</p>
             </div>
           </article>
         </div>
