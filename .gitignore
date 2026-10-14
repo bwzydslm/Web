@@ -1,0 +1,13 @@
+# 系统 / 编辑器
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.log
+
+# 构建产物（如果以后用框架，取消注释）
+# node_modules/
+# dist/
+# .astro/
+# public/

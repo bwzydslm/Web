@@ -1,0 +1,5 @@
+# 统一换行符，避免 Windows 和 Cloudflare（Linux）之间来回冲突
+# 仓库里统一存 LF；批处理文件保持 Windows 的 CRLF，否则 cmd 可能解析出错
+* text=auto eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf

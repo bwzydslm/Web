@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+
+# 私人站点不想被搜索引擎收录？把上面两行换成下面两行：
+# User-agent: *
+# Disallow: /

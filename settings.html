@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>设置 · 瓜の居酒屋</title>
+  <meta name="description" content="站点设置：外观、内容、上传与偏好。">
+  <link rel="icon" href="assets/img/favicon.svg">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="assets/js/site.config.js"></script>
+</head>
+<body data-page="settings" data-title="设置" data-desc="按你的习惯调整一切">
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <div class="main">
+      <header class="topbar" id="topbar"></header>
+
+      <main class="content">
+
+        <!-- ============================================================
+             每一块 = 一个 .card，每一行 = 一个 .row
+             可替换控件：开关(switch)、分段(seg)、下拉(select)、滑块(range)、
+                        颜色(color)、输入框(input)
+             想让某个设置真的生效，就在 page-settings.js 里加一条绑定。
+             ============================================================ -->
+
+        <!-- ▼ 外观 ─────────────────────────────────────────────── -->
+        <section class="card">
+          <div class="card__head"><span class="card__title">外观</span></div>
+
+          <div class="row">
+            <div class="row__main">
+              <div class="row__label">明暗模式</div>
+              <div class="row__desc">深色更接近参考图；浅色适合白天看</div>
+            </div>
+            <div class="row__ctrl">
+              <div class="seg" data-setting="theme.mode" data-type="seg">
+                <button type="button" data-value="dark">深色</button>
+                <button type="button" data-value="light">浅色</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="row__main">
+              <div class="row__label">强调色</div>
+              <div class="row__desc">按钮、开关、选中态都会用它</div>
+            </div>
+            <div class="row__ctrl">
+              <input type="color" data-setting="theme.accent" data-type="color" value="#a78bfa">
+              <button class="btn" type="button" data-preset="#a78bfa">默认紫</button>
+              <button class="btn" type="button" data-preset="#7dd3fc">冰蓝</button>
+              <button class="btn" type="button" data-preset="#f9a8d4">樱粉</button>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="row__main">
+              <div class="row__label">默认收起侧边栏</div>
+              <div class="row__desc">下次打开站点时左侧自动折叠（也可按 Ctrl+B）</div>
+            </div>
+            <div class="row__ctrl">
+              <label class="switch"><input type="checkbox" data-setting="ui.sidebarCollapsed" data-type="bool" data-apply="collapsed"><span class="switch__track"></span></label>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="row__main">
+              <div class="row__label">卡片背景微光</div>
+              <div class="row__desc">关闭后页面更素净</div>
+            </div>
+            <div class="row__ctrl">
+              <label class="switch"><input type="checkbox" checked data-setting="ui.glow" data-type="bool"><span class="switch__track"></span></label>
+            </div>
+          </div>
+        </section>
+
+        <!-- ▼ 图片墙 ───────────────────────────────────────────── -->
+        <section class="card">
+          <div class="card__head"><span class="card__title">图片墙</span></div>
+
+          <div class="row">
+            <div class="row__main">
+              <div class="row__label">每行列数</div>
+              <div class="row__desc">屏幕够宽时最多显示几列</div>
+            </div>
+            <div class="row__ctrl">
+              <div class="seg" data-setting="wall.columns" data-type="seg">
+                <button type="button" data-value="2">2</button>
+                <button type="button" data-value="3">3</button>
+                <button type="button" data-value="4">4</button>
+                <button type="button" data-value="5">5</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="row__main">
+              <div class="row__label">显示图片说明</div>
+              <div class="row__desc">关掉就只留纯图片，更干净</div>
+            </div>
+            <div class="row__ctrl">
+              <label class="switch"><input type="checkbox" checked data-setting="wall.showMeta" data-type="bool"><span class="switch__track"></span></label>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="row__main">
+              <div class="row__label">点击打开灯箱</div>
+              <div class="row__desc">关闭后点击图片不再放大</div>
+            </div>
+            <div class="row__ctrl">
+              <label class="switch"><input type="checkbox" checked data-setting="wall.lightbox" data-type="bool"><span class="switch__track"></span></label>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="row__main">
+              <div class="row__label">图片排序</div>
+              <div class="row__desc">图墙默认的排列方式</div>
+            </div>
+            <div class="row__ctrl">
+              <select class="select" data-setting="wall.sort" data-type="text" style="width:auto">
+                <option value="new">最新上传</option>
+                <option value="old">最早上传</option>
+                <option value="name">按名称</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <!-- ▼ 上传 ─────────────────────────────────────────────── -->
+        <section class="card">
+          <div class="card__head"><span class="card__title">上传</span></div>
+
+          <div class="row">
+            <div class="row__main">
+              <div class="row__label">上传目标</div>
+              <div class="row__desc">纯静态站点填了也不会生效，仅作记录</div>
+            </div>
+            <div class="row__ctrl" style="min-width:280px">
+              <input class="input" type="text" placeholder="https://api.example.com/upload"
+                     data-setting="api.uploadEndpoint" data-type="text">
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="row__main">
+              <div class="row__label">自动写入元数据</div>
+              <div class="row__desc">为上传的图片记录文件名、尺寸、时间</div>
+            </div>
+            <div class="row__ctrl">
+              <label class="switch"><input type="checkbox" checked data-setting="upload.autoMeta" data-type="bool"><span class="switch__track"></span></label>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="row__main">
+              <div class="row__label">默认相册</div>
+              <div class="row__desc">新图片默认归到哪一类</div>
+            </div>
+            <div class="row__ctrl">
+              <select class="select" data-setting="upload.album" data-type="text" style="width:auto">
+                <option>未分类</option>
+                <option>日常</option>
+                <option>风景</option>
+                <option>截图</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <!-- ▼ 其他 ─────────────────────────────────────────────── -->
+        <section class="card">
+          <div class="card__head"><span class="card__title">其他</span></div>
+
+          <div class="row">
+            <div class="row__main">
+              <div class="row__label">记住滚动位置</div>
+              <div class="row__desc">回到站点时恢复上次看到的位置</div>
+            </div>
+            <div class="row__ctrl">
+              <label class="switch"><input type="checkbox" data-setting="ui.rememberScroll" data-type="bool"><span class="switch__track"></span></label>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="row__main">
+              <div class="row__label">显示页脚</div>
+              <div class="row__desc">底部版权与社交图标</div>
+            </div>
+            <div class="row__ctrl">
+              <label class="switch"><input type="checkbox" checked data-setting="ui.showFooter" data-type="bool"><span class="switch__track"></span></label>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="row__main">
+              <div class="row__label">数据统计</div>
+              <div class="row__desc">查看本站本地存储了哪些设置</div>
+            </div>
+            <div class="row__ctrl">
+              <button class="btn" type="button" id="viewDataBtn">查看统计</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ▼ 数据管理 ─────────────────────────────────────────── -->
+        <section class="card">
+          <div class="card__head"><span class="card__title">数据管理</span></div>
+          <div class="card__body">
+            <div class="inline">
+              <button class="btn btn--ghost" type="button" id="resetBtn">
+                <span id="resetIco"></span> 恢复默认设置
+              </button>
+              <button class="btn" type="button" id="exportBtn">导出设置</button>
+              <button class="btn" type="button" id="importBtn">导入设置</button>
+              <input type="file" id="importInput" accept="application/json" hidden>
+            </div>
+            <p class="muted" style="margin-top:12px;font-size:12px">
+              设置保存在浏览器本地（localStorage），不会上传到服务器。
+              当前主题：<span id="curTheme" class="tag tag--accent">深色</span>
+            </p>
+          </div>
+        </section>
+
+      </main>
+
+      <footer class="footer" id="footer"></footer>
+    </div>
+  </div>
+
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/page-settings.js"></script>
+</body>
+</html>
