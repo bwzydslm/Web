@@ -1,21 +1,31 @@
 # Cloudflare Pages 响应头设置
-# 语法：URL 路径，缩进写响应头。更多用法见
-# https://developers.cloudflare.com/pages/configuration/headers/
+# 语法：第一行写路径，下一行缩进写「头名: 值」
+# 重要：一个请求如果匹配多条规则，所有规则的响应头会叠加；
+#       同一个头被写两次，值会用逗号拼接成畸形值。
+#       所以下面每类文件只让「一条」规则设置 Cache-Control。
+# 文档：https://developers.cloudflare.com/pages/configuration/headers/
 
+# ---------- 安全头：所有文件 ----------
 /*
   X-Content-Type-Options: nosniff
   X-Frame-Options: SAMEORIGIN
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: geolocation=(), microphone=(), camera=(), interest-cohort=()
 
-# 静态资源可以长缓存；如果你经常改 CSS/JS，想立刻生效可把这里删掉
-/assets/*
-  Cache-Control: public, max-age=604800
-
-# 图片、字体这类几乎不变的文件，缓存一年
-/assets/img/*
-  Cache-Control: public, max-age=31536000, immutable
-
-# HTML 不缓存，保证每次都能看到最新版本
+# ---------- 页面与代码：不缓存 ----------
+# 作用：改完 HTML/CSS/JS 推送后，访客刷新就能拿到新版，不会看到几天前的旧样式。
+# 这些文件每次请求会带上校验，内容没变就返回 304，速度并不受影响。
 /*.html
   Cache-Control: public, max-age=0, must-revalidate
+
+/*.css
+  Cache-Control: public, max-age=0, must-revalidate
+
+/*.js
+  Cache-Control: public, max-age=0, must-revalidate
+
+# ---------- 图片：长缓存 ----------
+# 图片内容基本不变，缓存一年，回头客打开更快。
+# 注意：换图但文件名不变的话，访客可能看到旧图 —— 换图时建议换个新文件名。
+/assets/img/*
+  Cache-Control: public, max-age=31536000, immutable

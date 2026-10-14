@@ -96,6 +96,7 @@ Cloudflare Pages 只能托管静态文件，**没有后端，接不了上传**�
 - 图片墙支持 `wall.html?q=关键词` 直接搜索
 - 所有设置存在浏览器 `localStorage`，设置页可以导出 / 导入 / 恢复默认
 - 想换浅色主题：设置页第一项，或者改 `site.config.js` 的 `theme.defaultMode`
+- 推送后页面没变化：先 `Ctrl + F5` 强刷。`_headers` 已把 html/css/js 设为不缓存、图片长缓存，正常情况下刷新即是新版
 
 ## 七、自检脚本（可选）
 
