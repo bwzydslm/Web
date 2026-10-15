@@ -142,7 +142,9 @@
         return { title: n.title, body: n.body, tags: n.tags || [] };
       }
 
-      function render(note, source) {
+      /* source 参数仍然保留（'cloud' / 'local' / 'config'），只是不再显示出来。
+         想确认当前内容来自哪一层，可以在控制台跑： Api.note('notice') */
+      function render(note, source) {   // eslint-disable-line no-unused-vars
         if (titleEl) titleEl.textContent = (note && note.title) || '随手记 / 公告';
 
         if (!note) {
@@ -163,15 +165,9 @@
           })
           .join('');
 
-        const srcText =
-          source === 'cloud' ? '内容来自云端数据库'
-          : source === 'local' ? '内容只存在这台电脑的浏览器里'
-          : '内容来自 site.config.js';
-
         bodyEl.innerHTML =
           (paragraphs || '<p class="muted">（正文是空的）</p>') +
-          (tags ? '<div class="inline" style="margin-top:14px">' + tags + '</div>' : '') +
-          '<p class="muted" style="margin-top:14px;font-size:11.5px">' + srcText + '</p>';
+          (tags ? '<div class="inline" style="margin-top:14px">' + tags + '</div>' : '');
       }
 
       function load() {
