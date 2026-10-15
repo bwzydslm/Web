@@ -177,7 +177,9 @@
       function load() {
         const cloud = window.Api
           ? Api.note(KEY).then(function (res) {
-              if (res && res.note && res.note.body) return { note: res.note, source: 'cloud' };
+              /* 只要云端有这条记录就以它为准 —— 哪怕正文是空的
+                 （原来要求 body 非空，会导致「在网页上清空内容后，默认文案又冒出来」） */
+              if (res && res.note) return { note: res.note, source: 'cloud' };
               return null;
             }).catch(function () { return null; })
           : Promise.resolve(null);
