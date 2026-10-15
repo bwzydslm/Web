@@ -15,10 +15,12 @@
   --sidebar-w-collapsed: 70px;
   --topbar-h: 74px;
   --content-max: 1240px;   /* 内容列最大宽度，顶栏/页脚/正文都按它对齐 */
-  --radius: 14px;
-  --radius-sm: 10px;
+  --radius: 10px;          /* 圆角整体调小 → 更硬朗、更简洁 */
+  --radius-sm: 8px;
   --gap: 16px;
   --ease: cubic-bezier(0.4, 0.16, 0.2, 1);
+  /* 等宽字体：数字、标签、编号用它，是"科技感"最省力的一招 */
+  --mono: ui-monospace, 'Cascadia Mono', 'JetBrains Mono', Consolas, 'Courier New', monospace;
 }
 
 html[data-theme='dark'] {
@@ -33,10 +35,11 @@ html[data-theme='dark'] {
   --text: #f5f5f7;
   --text-2: #c8c8d0;
   --muted: #8c8c97;
-  --shadow: 0 10px 28px rgba(0, 0, 0, 0.65);
+  --shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
   --glow: 0 0 0 1px var(--accent-line), 0 10px 26px rgba(124, 92, 240, 0.22);
   --ambient-1: rgba(124, 92, 240, 0.10);
   --ambient-2: rgba(124, 92, 240, 0.05);
+  --grid-line: rgba(255, 255, 255, 0.045);   /* 背景网格线（科技感的底纹） */
 }
 
 html[data-theme='light'] {
@@ -51,10 +54,11 @@ html[data-theme='light'] {
   --text: #16161a;
   --text-2: #45454f;
   --muted: #7c7c87;
-  --shadow: 0 6px 18px rgba(20, 20, 45, 0.07);
+  --shadow: 0 4px 14px rgba(20, 20, 45, 0.06);
   --glow: 0 0 0 1px var(--accent-line), 0 10px 24px rgba(124, 92, 240, 0.14);
   --ambient-1: rgba(124, 92, 240, 0.06);
   --ambient-2: rgba(124, 92, 240, 0.04);
+  --grid-line: rgba(20, 20, 45, 0.045);
 }
 
 /* ----------------------------------------------------------------- 基础 */
@@ -836,3 +840,84 @@ code { font-family: 'JetBrains Mono', Consolas, monospace; font-size: 12.5px; ba
   .sidebar, .topbar, .footer, .fab, .toast-host { display: none !important; }
   .content { padding: 0; }
 }
+
+/* ============================================================================
+ *  风格层：简约 + 一点科技感
+ *  ---------------------------------------------------------------------------
+ *  设计思路（想自己调就照这四条改）：
+ *    · 平 —— 去掉阴影和发光，只用 1px 边框划分板块
+ *    · 硬 —— 圆角统一收到 8~10px，不再是圆润的卡片
+ *    · 密 —— 数字、标签、编号、时间改用等宽字体，这是最省力的科技感
+ *    · 静 —— 背景换成极淡的网格，不再是紫色光晕
+ *  不想要这一层？删掉这一整段即可，上面的样式仍然完整可用。
+ * ==========================================================================*/
+
+/* ---------- 1. 背景：极淡网格，顶部渐隐 ---------- */
+body::before {
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 52px 52px;
+  -webkit-mask-image: radial-gradient(125% 78% at 50% 0%, #000 22%, transparent 78%);
+  mask-image: radial-gradient(125% 78% at 50% 0%, #000 22%, transparent 78%);
+}
+
+/* ---------- 2. 卡片：只靠边框，压掉阴影与发光 ---------- */
+.card, .stat, .quick, .mini-card { box-shadow: none; }
+.card { background: var(--card); }
+.stat:hover, .quick:hover { box-shadow: none; border-color: var(--accent-line); }
+.wall__item:hover { box-shadow: none; border-color: var(--accent); }
+
+/* ---------- 3. 分组标题：自动编号 01 / 02 / 03 ---------- */
+.content { counter-reset: sec; }
+.section-title { font-size: 11px; letter-spacing: 0.14em; }
+.section-title::before {
+  counter-increment: sec;
+  content: counter(sec, decimal-leading-zero);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  line-height: 1.6;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-line);
+  border-radius: 4px;
+  padding: 0 5px;
+}
+
+/* ---------- 4. hero：去掉光晕球，顶部一条强调线 ---------- */
+.hero { padding: 30px 32px; }
+.hero::after { display: none; }
+.hero::before {
+  content: '';
+  position: absolute; left: 0; right: 0; top: 0; height: 2px;
+  background: linear-gradient(90deg, var(--accent), transparent 62%);
+}
+.hero__title { font-size: 27px; font-weight: 650; letter-spacing: -0.01em; }
+.hero__badge { border-radius: 4px; font-family: var(--mono); letter-spacing: 0.04em; }
+.hero__meta { font-family: var(--mono); font-size: 12px; }
+.hero__meta kbd { font-family: var(--mono); }
+
+/* ---------- 5. 数字 / 标签 / 时间：等宽字体 ---------- */
+.stat__value, .stat__unit, .stat__label { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.stat__label { font-size: 11px; letter-spacing: 0.1em; }
+.stat::before { width: 2px; opacity: 0.5; }
+.tag { border-radius: 5px; font-family: var(--mono); font-size: 10.5px; padding: 2px 7px; }
+.wall__sub, .fileitem__sub, .card__hint { font-family: var(--mono); font-size: 11px; }
+.footer { font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.02em; }
+
+/* ---------- 6. 控件：圆角收到 8px，主按钮去掉厚阴影 ---------- */
+.btn, .icon-btn, .input, .textarea, .select, .seg, .seg button, .search { border-radius: 8px; }
+.btn--sm, .icon-btn--sm { border-radius: 7px; }
+.btn--primary { box-shadow: none; }
+.btn--primary:hover { box-shadow: 0 0 0 3px var(--accent-soft); }
+.fab { box-shadow: 0 6px 16px rgba(124, 92, 240, 0.28); }
+
+/* ---------- 7. 侧边栏：选中态改平铺，图标线更细 ---------- */
+.nav-item { border-radius: 7px; }
+.nav-item.is-active { background: var(--accent-soft); }
+.ico { stroke-width: 1.5; }
+.mini-card__cover { border-radius: 7px; }
+
+/* ---------- 8. 细节：滚动条更细 ---------- */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { border-width: 2px; }
