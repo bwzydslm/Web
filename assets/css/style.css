@@ -21,6 +21,13 @@
   --ease: cubic-bezier(0.4, 0.16, 0.2, 1);
   /* 等宽字体：数字、标签、编号用它，是"科技感"最省力的一招 */
   --mono: ui-monospace, 'Cascadia Mono', 'JetBrains Mono', Consolas, 'Courier New', monospace;
+
+  /* 像素字体：文件放在 assets/fonts/pixel-12px.woff2（见该目录下的 README.md）
+     没放文件时会静默退回后面的等宽字体，不影响显示 */
+  --pixel: 'PixelFont', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+
+  /* 正文用的字体。想「全站都用像素字体」就把下面这行改成： var(--pixel) */
+  --font-text: 'Inter', 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, -apple-system, sans-serif;
 }
 
 html[data-theme='dark'] {
@@ -70,7 +77,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: 'Inter', 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, -apple-system, sans-serif;
+  font-family: var(--font-text);
   font-size: 14.5px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -921,3 +928,55 @@ body::before {
 /* ---------- 8. 细节：滚动条更细 ---------- */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-thumb { border-width: 2px; }
+
+/* ============================================================================
+ *  像素字体层
+ *  ---------------------------------------------------------------------------
+ *  【怎么启用】把字体文件放到 assets/fonts/pixel-12px.woff2
+ *              下载地址和版本选择见 assets/fonts/README.md
+ *  【没放文件会怎样】静默退回后面的等宽字体，页面正常显示，
+ *              只是浏览器控制台会有两条 404（可以忽略）
+ *
+ *  ⚠️ 关键：像素字体必须在「12 的整数倍」尺寸下才清晰 —— 12 / 24 / 36px。
+ *     用 14px、17px 这种尺寸会出现像素格子对不齐的糊边。
+ *     所以下面所有字号都吸附到了这几个值。
+ *
+ *  界面元素用像素字体；正文段落保持系统字体（中文像素字体的字形覆盖有限，
+ *  长段落可读性也差）。想全站都像素化：把 :root 里的 --font-text 改成 var(--pixel)。
+ * ==========================================================================*/
+
+@font-face {
+  font-family: 'PixelFont';
+  src: url('../fonts/pixel-12px.woff2') format('woff2'),
+       url('../fonts/pixel-12px.ttf') format('truetype');
+  font-display: swap;
+}
+
+/* ---------- 1. 哪些地方用像素字体 ---------- */
+.page-title, .page-desc,
+.brand__name, .brand__sub,
+.nav-item__text, .nav-item__en,
+.card__title, .card__hint, .section-title,
+.hero__badge, .hero__title, .hero__meta,
+.stat__value, .stat__unit, .stat__label,
+.btn, .tag, .wall__name, .row__label, .field__label,
+.footer {
+  font-family: var(--pixel);
+  letter-spacing: 0;      /* 像素字体加字距会破坏格子对齐 */
+}
+
+/* ---------- 2. 字号吸附到 12 的整数倍 ---------- */
+.page-title { font-size: 24px; }
+.hero__title { font-size: 36px; line-height: 1.2; }
+.stat__value { font-size: 24px; }
+
+.nav-item__text, .brand__name, .card__title, .section-title,
+.hero__badge, .hero__meta, .btn, .tag, .wall__name,
+.row__label, .field__label, .page-desc, .card__hint,
+.stat__label, .stat__unit, .brand__sub, .nav-item__en, .footer {
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* 小字仍然保持 12px 会略大，副标题这种装饰性的收一点 */
+.brand__sub, .nav-item__en { font-size: 12px; opacity: 0.75; }
