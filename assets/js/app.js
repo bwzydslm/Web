@@ -178,6 +178,50 @@
 
   /* -------------------------------------------------------------- 渲染侧栏 */
 
+  /** 某个功能页是不是被 site.config.js 关掉了（features 里显式设为 false） */
+  function isFeatureOff(id) {
+    const f = CFG.features || {};
+    return Object.prototype.hasOwnProperty.call(f, id) && f[id] === false;
+  }
+
+  /**
+   * 把「开发中」的页面锁掉，三层保险：
+   *   1) 给已有内容加 inert —— 鼠标点不到、Tab 也聚焦不进去
+   *   2) 内容模糊变淡，让人一眼看出不可用
+   *   3) 盖一层提示面板，替代原本的操作区
+   * 另外页面脚本会检查 body.dataset.pageLocked，发现自己被锁就完全不初始化。
+   */
+  function lockFeaturePage(id) {
+    document.body.dataset.pageLocked = '1';
+
+    const content = document.querySelector('.content');
+    if (!content) return;
+
+    const item = (CFG.nav || []).filter(function (n) { return n.id === id; })[0] || {};
+    const label = item.label || '这个功能';
+
+    Array.prototype.forEach.call(content.children, function (el) {
+      el.setAttribute('inert', '');
+      el.setAttribute('aria-hidden', 'true');
+    });
+
+    const box = document.createElement('div');
+    box.className = 'dev-lock';
+    box.innerHTML =
+      '<div class="dev-lock__box">' +
+        '<span class="dev-lock__badge">开发中</span>' +
+        '<h2 class="dev-lock__title">' + label + '还没做好</h2>' +
+        '<p class="dev-lock__text">这个功能正在开发，暂时不能使用。先去首页或设置页看看吧。</p>' +
+        '<div class="dev-lock__actions">' +
+          '<a class="btn btn--primary" href="index.html">回到首页</a>' +
+          '<a class="btn" href="settings.html">打开设置</a>' +
+        '</div>' +
+      '</div>';
+
+    content.classList.add('is-locked');
+    content.appendChild(box);
+  }
+
   /** 侧边栏底部的小卡片，内容读 site.config.js 的 sidebarCard */
   function sidebarCardHtml() {
     const c = CFG.sidebarCard || {};
@@ -209,11 +253,14 @@
     const navHtml = CFG.nav
       .map(function (item) {
         const on = item.id === active ? ' is-active' : '';
+        const locked = isFeatureOff(item.id);
         return (
-          '<a class="nav-item' + on + '" href="' + item.href + '" title="' + item.label + '" data-nav="' + item.id + '">' +
+          '<a class="nav-item' + on + (locked ? ' is-disabled' : '') + '" href="' + item.href +
+            '" title="' + item.label + (locked ? '（开发中）' : '') + '" data-nav="' + item.id + '">' +
             '<span class="nav-item__ico">' + icon(item.icon, 18) + '</span>' +
             '<span class="nav-item__text">' + item.label + '</span>' +
             '<span class="nav-item__en">' + (item.en || '') + '</span>' +
+            (locked ? '<span class="nav-item__lock">开发中</span>' : '') +
           '</a>'
         );
       })
@@ -351,6 +398,10 @@
 
     renderSidebar();
     renderTopbar();
+
+    /* 被 features 关掉的页面：盖提示面板并锁住交互 */
+    if (isFeatureOff(currentPage())) lockFeaturePage(currentPage());
+
     renderFooter();
     applyMode();
 
@@ -374,5 +425,5 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
 
-  window.SiteApp = { applyAccent, applyMode, renderSidebar, ICONS };
+  window.SiteApp = { applyAccent, applyMode, renderSidebar, isFeatureOff, ICONS };
 })();

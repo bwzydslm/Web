@@ -17,6 +17,9 @@
   }
 
   ready(function () {
+    /* 被 features 关掉时直接退出，避免请求接口和绑定事件 */
+    if (document.body.dataset.pageLocked) return;
+
     const dropzone = document.getElementById('dropzone');
     const fileInput = document.getElementById('fileInput');
     const fileList = document.getElementById('fileList');

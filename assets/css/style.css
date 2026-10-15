@@ -980,3 +980,80 @@ body::before {
 
 /* 小字仍然保持 12px 会略大，副标题这种装饰性的收一点 */
 .brand__sub, .nav-item__en { font-size: 12px; opacity: 0.75; }
+
+/* ============================================================================
+ *  「开发中」锁定态
+ *  ---------------------------------------------------------------------------
+ *  由 site.config.js 的 features 开关控制，逻辑在 app.js 的 lockFeaturePage()。
+ *  三层保险：内容加 inert（鼠标键盘都进不去）+ 模糊变淡 + 盖提示面板。
+ * ==========================================================================*/
+
+/* ---------- 侧边栏导航上的「开发中」小标记 ---------- */
+.nav-item__lock {
+  margin-left: 6px;
+  flex: none;
+  font-family: var(--pixel);
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-line);
+  border-radius: 4px;
+  padding: 0 5px;
+}
+.nav-item.is-disabled { opacity: 0.75; }
+.nav-item.is-disabled .nav-item__en { display: none; }   /* 地方不够，藏掉英文小字 */
+html.sidebar-collapsed .nav-item__lock { display: none; } /* 收起状态没地方放 */
+
+/* ---------- 快捷入口上的小标记 ---------- */
+.quick__lock {
+  font-family: var(--pixel);
+  font-size: 12px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-line);
+  border-radius: 4px;
+  padding: 0 5px;
+}
+.quick.is-disabled::after { opacity: 0.5; }
+
+/* ---------- 内容区锁定 ---------- */
+.content.is-locked { position: relative; min-height: 62vh; }
+.content.is-locked > *:not(.dev-lock) {
+  filter: blur(2px) saturate(0.55);
+  opacity: 0.3;
+  pointer-events: none;    /* inert 之外再加一道，双保险 */
+  user-select: none;
+}
+
+/* ---------- 中间的提示面板 ---------- */
+.dev-lock {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+.dev-lock__box {
+  max-width: 420px;
+  text-align: center;
+  padding: 28px 26px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: var(--shadow);
+}
+.dev-lock__badge {
+  display: inline-block;
+  font-family: var(--pixel);
+  font-size: 12px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-line);
+  border-radius: 4px;
+  padding: 2px 8px;
+}
+.dev-lock__title { font-family: var(--pixel); font-size: 24px; margin-top: 14px; }
+.dev-lock__text { color: var(--muted); font-size: 13px; margin-top: 8px; line-height: 1.7; }
+.dev-lock__actions { display: flex; justify-content: center; gap: 10px; margin-top: 18px; }

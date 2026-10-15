@@ -83,12 +83,21 @@
     })();
 
     /* ---------- 4. 快捷入口（也可以直接在 HTML 里写死） ---------- */
+    /* 指向「开发中」页面的入口会标上小标记，免得点进去才发现不能用 */
+    function isOff(href) {
+      const nav = (CFG.nav || []).filter(function (n) { return n.href === href; })[0];
+      return !!(nav && window.SiteApp && SiteApp.isFeatureOff(nav.id));
+    }
+
     const quick = document.getElementById('quickLinks');
     if (quick && home.quickLinks && home.quickLinks.length) {
       quick.innerHTML = home.quickLinks
         .map(function (q) {
-          return '<a class="quick" href="' + q.href + '"><span class="quick__ico">' + window.icon(q.icon, 18) + '</span>' +
-                 '<span><span class="quick__label">' + q.label + '</span></span></a>';
+          const off = isOff(q.href);
+          return '<a class="quick' + (off ? ' is-disabled' : '') + '" href="' + q.href + '">' +
+                 '<span class="quick__ico">' + window.icon(q.icon, 18) + '</span>' +
+                 '<span><span class="quick__label">' + q.label + '</span>' +
+                 (off ? ' <span class="quick__lock">开发中</span>' : '') + '</span></a>';
         })
         .join('');
     }

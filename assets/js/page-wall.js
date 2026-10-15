@@ -29,6 +29,9 @@ const DEMO_ITEMS = [
   }
 
   ready(function () {
+    /* 这个页面被 site.config.js 的 features 关掉了：不绑定任何事件，也不请求接口 */
+    if (document.body.dataset.pageLocked) return;
+
     const wallEl = document.getElementById('wall');
     const emptyEl = document.getElementById('wallEmpty');
     const hintEl = document.getElementById('filterHint');

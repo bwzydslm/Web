@@ -118,6 +118,7 @@ Pages 项目 → **Custom domains** → **Set up a custom domain** → 输入域
 - 所有设置存在浏览器 `localStorage`，设置页可以导出 / 导入 / 恢复默认
 - 想换浅色主题：设置页第一项，或者改 `site.config.js` 的 `theme.defaultMode`
 - 推送后页面没变化：先 `Ctrl + F5` 强刷。`_headers` 已把 html/css/js 设为不缓存、图片长缓存，正常情况下刷新即是新版
+- 想临时关掉某个页面（功能还没做完时很实用）：在 `site.config.js` 的 `features` 里把它设为 `false`，例如 `features: { wall: false }` —— 该页会变成「开发中」：内容模糊锁定、鼠标和键盘都操作不了、接口也不会被请求。改回 `true` 立刻恢复
 
 ## 七、自检脚本（可选）
 
