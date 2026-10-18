@@ -75,12 +75,26 @@ export async function onRequestPatch({ request, env, params }) {
     return json({ ok: false, error: 'bad_json' }, 400);
   }
 
+  /* ★ 可见性不能在这里改：文件路径按可见性分了 pub/ 和 prv/ 前缀，
+     改数据库字段不会移动 R2 里的对象，会导致「标成私密但实际还能被公开访问」。
+     要改可见性，请重新上传（或在 R2 + D1 里手动搬对象）。 */
+  if (body.visibility !== undefined && body.visibility !== row.visibility) {
+    return json(
+      {
+        ok: false,
+        error: 'visibility_locked',
+        message: '暂不支持修改可见性（文件路径已按 pub/ 或 prv/ 分区），请重新上传这张图。',
+      },
+      400
+    );
+  }
+
   const next = {
     name: body.name === undefined ? row.name : str(body.name, 200),
     description: body.description === undefined ? row.description : str(body.description, 2000),
     tags: body.tags === undefined ? row.tags : (Array.isArray(body.tags) ? body.tags.join(',') : str(body.tags, 300)),
     album: body.album === undefined ? row.album : str(body.album, 50) || '未分类',
-    visibility: body.visibility === undefined ? row.visibility : body.visibility === 'private' ? 'private' : 'public',
+    visibility: row.visibility,
     fav: body.fav === undefined ? row.fav : body.fav ? 1 : 0,
   };
 

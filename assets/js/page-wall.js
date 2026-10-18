@@ -210,7 +210,7 @@ const DEMO_ITEMS = [
       return (
         '<div class="wall__item" data-id="' + esc(it.id || '') + '">' +
           actions +
-          '<img class="wall__thumb" src="' + esc(it.src) + '" alt="' + esc(it.name) + '" loading="lazy">' +
+          '<img class="wall__thumb" src="' + esc(it.src) + '" alt="' + esc(it.name) + '" loading="lazy" decoding="async">' +
           (showMeta
             ? '<div class="wall__meta">' +
                 '<div class="wall__name">' + esc(it.name) + badges + '</div>' +

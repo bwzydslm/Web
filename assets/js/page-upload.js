@@ -82,7 +82,15 @@
           UI.toast(f.name + ' 不是图片，已跳过', 'error');
           return;
         }
-        const item = { file: f, url: URL.createObjectURL(f), width: 0, height: 0, status: 'ready', progress: 0, error: '' };
+        const item = {
+          file: f,
+          url: URL.createObjectURL(f),
+          origSize: f.size,
+          sent: null,        // 压缩后真正要上传的 File
+          sentSize: 0,       // 压缩后的大小
+          width: 0, height: 0,
+          status: 'ready', progress: 0, error: '',
+        };
         queue.push(item);
 
         /* 顺便量尺寸，上传时一起写进数据库 */
@@ -95,6 +103,75 @@
         probe.src = item.url;
       });
       renderQueue();
+    }
+
+    /* --------------------------------------------------------- 浏览器端压缩
+       手机照片动辄 5~8MB，直接传又慢又费流量。这里用 canvas 把最长边缩到
+       MAX_EDGE、按「压缩质量」滑块转成 WebP，通常能小 5~10 倍。
+       GIF（动图）和 SVG 不处理，避免压坏；压完反而更大时保留原图。 */
+    const MAX_EDGE = 1600;
+
+    const USE_WEBP = (function () {
+      try {
+        const c = document.createElement('canvas');
+        c.width = c.height = 1;
+        return c.toDataURL('image/webp').indexOf('data:image/webp') === 0;
+      } catch (e) {
+        return false;
+      }
+    })();
+
+    function loadBitmap(file) {
+      if (window.createImageBitmap) return createImageBitmap(file);
+      return new Promise(function (resolve, reject) {
+        const img = new Image();
+        img.onload = function () { resolve(img); };
+        img.onerror = reject;
+        img.src = URL.createObjectURL(file);
+      });
+    }
+
+    async function compressImage(file, quality) {
+      if (/gif|svg/.test(file.type)) return null;          // 动图/矢量不压
+
+      let bmp;
+      try {
+        bmp = await loadBitmap(file);
+      } catch (e) {
+        return null;                                        // 解不出来就传原图
+      }
+
+      const w0 = bmp.width || bmp.naturalWidth;
+      const h0 = bmp.height || bmp.naturalHeight;
+      if (!w0 || !h0) return null;
+
+      const scale = Math.min(1, MAX_EDGE / Math.max(w0, h0));
+
+      /* 尺寸本来就小、体积也不大 → 不必重新编码（重编码还可能导致变大） */
+      if (scale === 1 && file.size <= 500 * 1024) return null;
+
+      const w = Math.round(w0 * scale);
+      const h = Math.round(h0 * scale);
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(bmp, 0, 0, w, h);
+
+      const type = USE_WEBP ? 'image/webp' : 'image/jpeg';
+      const blob = await new Promise(function (r) { canvas.toBlob(r, type, quality); });
+      if (!blob || blob.size >= file.size) return null;
+
+      const ext = type === 'image/webp' ? '.webp' : '.jpg';
+      const name = file.name.replace(/\.[^.]+$/, '') + ext;
+
+      return {
+        blob: blob,
+        file: new File([blob], name, { type: type }),
+        width: w,
+        height: h,
+      };
     }
 
     /* --------------------------------------------------------- 渲染队列 */
@@ -115,17 +192,24 @@
           const badge =
             it.status === 'done' ? '<span class="tag tag--accent">已完成</span>' :
             it.status === 'error' ? '<span class="tag">失败</span>' :
+            it.status === 'compressing' ? '<span class="tag">压缩中…</span>' :
             it.status === 'uploading' ? '<span class="tag">上传中 ' + it.progress + '%</span>' :
             '<span class="tag">待上传</span>';
 
           const dim = it.width ? it.width + '×' + it.height + ' · ' : '';
+
+          /* 压缩过就显示「原始大小 → 压缩后」，一眼看出省了多少 */
+          const sizeText =
+            it.sentSize && it.sentSize < it.origSize
+              ? fmtSize(it.origSize) + ' → <b style="color:var(--accent)">' + fmtSize(it.sentSize) + '</b>'
+              : fmtSize(it.file.size);
 
           return (
             '<div class="fileitem">' +
               '<img class="fileitem__thumb" src="' + it.url + '" alt="">' +
               '<div class="fileitem__main">' +
                 '<div class="fileitem__name">' + it.file.name + '</div>' +
-                '<div class="fileitem__sub">' + dim + fmtSize(it.file.size) +
+                '<div class="fileitem__sub">' + dim + sizeText +
                   (it.error ? ' · <span style="color:#ff8a8a">' + it.error + '</span>' : '') + '</div>' +
                 (it.status === 'uploading' || it.status === 'done'
                   ? '<div class="progress"><div class="progress__bar" style="width:' + it.progress + '%"></div></div>'
@@ -186,12 +270,46 @@
 
       uploading = true;
       startBtn.disabled = true;
-      queue.forEach(function (it) { it.status = 'ready'; it.progress = 0; it.error = ''; });
+      queue.forEach(function (it) {
+        it.status = 'ready';
+        it.progress = 0;
+        it.error = '';
+        it.sent = null;
+        it.sentSize = 0;
+      });
       renderQueue();
+
+      /* ① 先逐张压缩（失败就用原图，绝不阻塞上传） */
+      const quality = (parseInt(Store.get('upload.quality', 82), 10) || 82) / 100;
+      for (let i = 0; i < queue.length; i++) {
+        const it = queue[i];
+        it.status = 'compressing';
+        renderQueue();
+        uploadState.textContent = '正在压缩 ' + (i + 1) + ' / ' + queue.length + '…';
+
+        let out = null;
+        try {
+          out = await compressImage(it.file, quality);
+        } catch (e) {
+          out = null;
+        }
+
+        if (out) {
+          it.sent = out.file;
+          it.sentSize = out.blob.size;
+          it.width = out.width;
+          it.height = out.height;
+        } else {
+          it.sent = it.file;
+          it.sentSize = it.file.size;
+        }
+      }
+      renderQueue();
+      uploadState.textContent = '开始上传…';
 
       try {
         const res = await Api.upload(
-          queue.map(function (it) { return it.file; }),
+          queue.map(function (it) { return it.sent || it.file; }),
           meta(),
           function (pct) {
             const each = Math.min(100, Math.round(pct));

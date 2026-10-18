@@ -78,7 +78,10 @@ export async function onRequestPost({ request, env }) {
 
   const now = Date.now();
   const d = new Date(now);
-  const prefix = d.getUTCFullYear() + '/' + String(d.getUTCMonth() + 1).padStart(2, '0');
+  /* ★ 路径里带上可见性前缀 pub/ 或 prv/：
+     这样读取图片时不用查 D1 就知道要不要口令，公开图也才能安全地进边缘缓存 */
+  const scope = visibility === 'private' ? 'prv' : 'pub';
+  const prefix = scope + '/' + d.getUTCFullYear() + '/' + String(d.getUTCMonth() + 1).padStart(2, '0');
   const created = [];
 
   for (let i = 0; i < files.length; i++) {
