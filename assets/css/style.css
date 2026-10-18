@@ -376,9 +376,17 @@ html.sidebar-collapsed .sidebar__tools { flex-direction: column; }
 }
 .card + .card { margin-top: var(--gap); }
 
+/* 但网格里的卡片是「并排」的，不能再加这个间距 ——
+   否则第二张会被往下顶 16px，高度还比第一张少 16px（看起来就是没对齐）。
+   height: 100% 让同一行里的卡片高低一致。 */
+.grid > .card + .card { margin-top: 0; }
+.grid > .card { height: 100%; }
+
 .card__head {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   padding: 15px 20px;
+  /* 固定最小高度：让「头里只有文字」和「头里有按钮」的卡片分隔线对齐 */
+  min-height: 60px;
   border-bottom: 1px solid var(--line);
 }
 .card__title { font-size: 14.5px; font-weight: 620; letter-spacing: 0.02em; }
