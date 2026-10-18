@@ -30,8 +30,8 @@ window.SITE_CONFIG = {
    * 没列在这里的页面（首页、设置等）始终可用。
    */
   features: {
-    wall: false,     // 图墙
-    upload: false,   // 上传
+    wall: true,      // 图墙
+    upload: true,    // 上传
   },
 
   /* ---------- 左侧导航 ---------- */

@@ -18,7 +18,7 @@ binding = "DB"
 database_name = "db"
 database_id = "dad30ebc-6093-44ff-bfbf-74e5c4bb3c94"
 
-# R2 桶绑定（暂时没开通 R2 就先留着，本地开发会用一个空的模拟桶）
+# R2 桶绑定（线上请在面板 Bindings 里加，变量名必须是 BUCKET）
 [[r2_buckets]]
 binding = "BUCKET"
 bucket_name = "izakaya-images"
