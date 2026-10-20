@@ -232,6 +232,8 @@ const DEMO_ITEMS = [
 
       if (!items.length) {
         emptyEl.hidden = false;
+        /* 空状态里已经有一个「开始上传」按钮了，别再显示末尾那块「添加新图片」 */
+        if (addTile) addTile.hidden = true;
         const hasAny = state.raw.length > 0;
         emptyEl.querySelector('.placeholder__title').textContent =
           hasAny ? '没有符合条件的图片' : '图墙还是空的';
@@ -243,6 +245,7 @@ const DEMO_ITEMS = [
         return;
       }
       emptyEl.hidden = true;
+      if (addTile) addTile.hidden = false;
 
       addTile.insertAdjacentHTML('beforebegin', items.map(card).join(''));
       wallEl.querySelectorAll('.wall__item:not([data-demo])').forEach(function (n) {
