@@ -716,8 +716,48 @@ input[type='color'] { width: 40px; height: 26px; padding: 0; border: 1px solid v
   transition: opacity 0.22s var(--ease);
 }
 .lightbox.is-open { opacity: 1; visibility: visible; }
-.lightbox__img { max-width: min(1100px, 92vw); max-height: 78vh; border-radius: 12px; box-shadow: 0 30px 70px rgba(0, 0, 0, 0.6); }
-.lightbox__bar { display: flex; align-items: center; gap: 10px; margin-top: 14px; color: #ded8ee; }
+
+/* 缩放容器：超出部分裁掉，手势由它接管（不让页面跟着滚） */
+.lightbox__stage {
+  position: relative;
+  display: grid; place-items: center;
+  max-width: min(1200px, 92vw);
+  max-height: 72vh;
+  overflow: hidden;
+  border-radius: 12px;
+  touch-action: none;
+  cursor: zoom-in;
+}
+.lightbox__stage.is-zoomed { cursor: grab; }
+.lightbox__stage.is-dragging { cursor: grabbing; }
+
+.lightbox__img {
+  max-width: min(1200px, 92vw);
+  max-height: 72vh;
+  border-radius: 12px;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.6);
+  transform-origin: center center;
+  will-change: transform;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.lightbox__bar { display: flex; align-items: center; gap: 18px; margin-top: 14px; color: #ded8ee; }
+.lightbox__zoom { display: flex; align-items: center; gap: 6px; }
+.lightbox__pct {
+  font-family: var(--pixel);
+  font-size: 12px;
+  min-width: 56px; height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: transparent;
+  color: #ded8ee;
+  cursor: pointer;
+  transition: color 0.16s var(--ease), border-color 0.16s var(--ease);
+}
+.lightbox__pct:hover { color: var(--accent); border-color: var(--accent-line); }
+
 .lightbox__close { position: absolute; top: 22px; right: 24px; }
 
 /* --------------------------------------------------------------- 上传页 */

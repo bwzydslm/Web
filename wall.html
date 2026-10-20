@@ -85,13 +85,21 @@
   </div>
 
   <!-- 灯箱：点图片放大查看 -->
+  <!-- 灯箱：滚轮/双指缩放、放大后拖动平移、双击还原 -->
   <div class="lightbox" id="lightbox">
     <button class="icon-btn lightbox__close" id="lightboxClose" type="button">✕</button>
-    <div>
-      <img class="lightbox__img" id="lightboxImg" alt="">
-      <div class="lightbox__bar">
-        <span id="lightboxCaption">—</span>
-      </div>
+
+    <div class="lightbox__stage" id="lightboxStage">
+      <img class="lightbox__img" id="lightboxImg" alt="" draggable="false">
+    </div>
+
+    <div class="lightbox__bar">
+      <span id="lightboxCaption">—</span>
+      <span class="lightbox__zoom">
+        <button class="icon-btn icon-btn--sm" id="zoomOut" type="button" title="缩小（或按 -）">−</button>
+        <button class="lightbox__pct" id="zoomReset" type="button" title="点击还原（或按 0）">100%</button>
+        <button class="icon-btn icon-btn--sm" id="zoomIn" type="button" title="放大（或按 +）">+</button>
+      </span>
     </div>
   </div>
 
