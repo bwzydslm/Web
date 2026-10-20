@@ -161,6 +161,11 @@ window.Api = (function () {
     },
     upload: upload,
 
+    /* 首页专用：一个请求拿全「统计 + 最近图片 + 公告」，省一次跨境往返 */
+    home: function () {
+      return req('/api/home');
+    },
+
     /* 小文本板块（随手记 / 公告）：读公开，写需要口令 */
     note: function (key) {
       return req('/api/notes/' + encodeURIComponent(key));

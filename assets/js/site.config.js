@@ -115,3 +115,39 @@ window.SITE_CONFIG = {
     },
   },
 };
+
+/* ============================================================================
+ *  首帧初始化（原来单独的 theme-init.js，合并到这里是为了少发一个阻塞请求）
+ *  ---------------------------------------------------------------------------
+ *  这段在 <head> 里同步执行，赶在浏览器画第一帧之前决定两件事：
+ *    · 明暗模式      → 否则浅色主题会「先黑一下再变白」
+ *    · 侧边栏收起态  → 否则每次跳页都会「先展开、再收起」抖一下
+ *  app.js 里的 applyMode() 逻辑要和这里保持一致。
+ * ==========================================================================*/
+(function () {
+  'use strict';
+
+  try {
+    const saved = JSON.parse(localStorage.getItem('izakaya.theme.mode') || 'null');
+    const cfg = (window.SITE_CONFIG && window.SITE_CONFIG.theme) || {};
+    const pref = saved || cfg.defaultMode || 'dark';
+
+    let mode = pref;
+    if (pref === 'auto') {
+      const h = new Date().getHours();          /* 早 7 点到晚 7 点算白天 */
+      mode = h >= 7 && h < 19 ? 'light' : 'dark';
+    }
+    document.documentElement.dataset.theme = mode === 'light' ? 'light' : 'dark';
+  } catch (e) {
+    document.documentElement.dataset.theme = 'dark';
+  }
+
+  try {
+    const collapsed = JSON.parse(localStorage.getItem('izakaya.ui.sidebarCollapsed') || 'null');
+    const cfgCollapsed =
+      (window.SITE_CONFIG && window.SITE_CONFIG.theme && window.SITE_CONFIG.theme.defaultCollapsed) || false;
+    if ((collapsed === null ? cfgCollapsed : collapsed) === true) {
+      document.documentElement.classList.add('sidebar-collapsed');
+    }
+  } catch (e) {}
+})();

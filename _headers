@@ -18,11 +18,22 @@
 /*.html
   Cache-Control: public, max-age=0, must-revalidate
 
+# ---------- CSS 给 120 秒缓存，JS 不缓存 ----------
+# 说明：`_headers` 里同一个头被两条规则命中时，值会被逗号拼接成畸形值，
+#       所以不能"先全局、再单独给某个文件开小灶"。这里只给 CSS 放宽，理由是：
+#         · CSS 是唯一「渲染阻塞」的静态资源，每次校验都会推迟首屏
+#         · JS 里含有 site.config.js（你经常改），保持不缓存才能改完立刻生效
+#       代价：改样式后最多 2 分钟内可能看到旧的，Ctrl+F5 可强制刷新。
 /*.css
-  Cache-Control: public, max-age=0, must-revalidate
+  Cache-Control: public, max-age=120, stale-while-revalidate=86400
 
 /*.js
   Cache-Control: public, max-age=0, must-revalidate
+
+# ---------- Early Hints：提前预载渲染阻塞的资源 ----------
+# 浏览器收到 103 就开始拉 CSS，不用等 HTML 下载完，能省一个往返
+/*
+  Link: </assets/css/style.css>; rel=preload; as=style
 
 # ---------- 图片：长缓存 ----------
 # 图片内容基本不变，缓存一年，回头客打开更快。

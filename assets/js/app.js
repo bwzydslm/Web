@@ -153,7 +153,7 @@
 
   /**
    * 'auto' = 跟随时间：早 7 点到晚 7 点用浅色，其余时间用深色。
-   * 判断逻辑和 assets/js/theme-init.js 保持一致。
+   * 判断逻辑和 site.config.js 末尾的「首帧初始化」保持一致。
    */
   function effectiveMode(mode) {
     if (mode !== 'auto') return mode === 'light' ? 'light' : 'dark';

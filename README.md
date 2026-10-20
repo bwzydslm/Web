@@ -31,9 +31,8 @@
 └── assets/
     ├── css/style.css     # 全部样式，配色变量在最上面
     ├── js/
-    │   ├── site.config.js   ★ 你主要改这个文件：站名、导航、页脚
+    │   ├── site.config.js   ★ 你主要改这个文件：站名、导航、页脚（末尾还有首帧初始化）
     │   ├── app.js           公共逻辑：侧边栏 / 顶栏 / 页脚渲染、主题、存储
-    │   ├── theme-init.js    首帧前决定明暗模式和侧栏状态（防闪烁）
     │   ├── api.js           前端访问后端 API 的唯一出口
     │   ├── page-home.js     首页逻辑
     │   ├── page-wall.js     图墙逻辑（DEMO_ITEMS 在这里登记图片）
