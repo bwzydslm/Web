@@ -405,6 +405,14 @@
     renderFooter();
     applyMode();
 
+    /* 右下角「回到顶部」按钮（原来是内联 onclick，为了让 CSP 能禁掉内联脚本才搬到这里） */
+    const fab = document.getElementById('fabTop');
+    if (fab) {
+      fab.addEventListener('click', function () {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
+
     /* 跟随时间模式：每 10 分钟重算一次，跨过 7:00 / 19:00 会自动切换 */
     setInterval(function () {
       if ((Store.get('theme.mode', CFG.theme.defaultMode) || 'dark') === 'auto') applyMode();

@@ -161,6 +161,89 @@
       });
     }
 
+    /* ----------------------------------------- 2.7 「？？？」口令门 -----
+     * 把「服务端 / API」和「数据管理」两块藏起来，输入口令验证通过才显示。
+     * 验证走的是**真的后端接口**（POST /api/auth/check），不是前端硬编码一个密码 ——
+     * 前端隐藏只挡得住"随手点开"，挡不住会开 DevTools 的人。
+     * ------------------------------------------------------------------ */
+    const gatePanel = document.getElementById('gatePanel');
+    const privatePanels = document.getElementById('privatePanels');
+    const gateInput = document.getElementById('gateInput');
+    const gateBtn = document.getElementById('gateBtn');
+    const gateStatus = document.getElementById('gateStatus');
+    const lockBtn = document.getElementById('lockBtn');
+    const UNLOCK_KEY = 'izakaya.unlocked';
+
+    function isUnlocked() {
+      try { return sessionStorage.getItem(UNLOCK_KEY) === '1'; } catch (e) { return false; }
+    }
+
+    function setUnlocked(on) {
+      try {
+        if (on) sessionStorage.setItem(UNLOCK_KEY, '1');
+        else sessionStorage.removeItem(UNLOCK_KEY);
+      } catch (e) {}
+    }
+
+    function showPrivate(on) {
+      if (privatePanels) privatePanels.hidden = !on;
+      if (gatePanel) gatePanel.hidden = on;
+    }
+
+    async function tryUnlock() {
+      const value = ((gateInput && gateInput.value) || '').trim();
+      if (!value) {
+        if (gateStatus) gateStatus.textContent = '请输入口令';
+        return;
+      }
+
+      if (gateBtn) gateBtn.disabled = true;
+      if (gateStatus) gateStatus.textContent = '验证中…';
+
+      try {
+        /* 拿输入的这串口令直接去敲后端：401 = 不对，200 = 通过 */
+        const res = await fetch(Api.url('/api/auth/check'), {
+          method: 'POST',
+          headers: { Authorization: 'Bearer ' + value },
+        });
+
+        if (res.ok) {
+          Api.save({ token: value });   /* 顺便存到本机，后面的上传 / 编辑公告就能用 */
+          setUnlocked(true);
+          showPrivate(true);
+          if (gateInput) gateInput.value = '';
+          if (gateStatus) gateStatus.textContent = '';
+          paintApiStatus();
+          UI.toast('已验证', 'success');
+        } else if (res.status === 401) {
+          if (gateStatus) gateStatus.textContent = '口令不正确';
+        } else {
+          if (gateStatus) gateStatus.textContent = '验证失败（HTTP ' + res.status + '）';
+        }
+      } catch (e) {
+        if (gateStatus) gateStatus.textContent = '网络错误：' + e.message;
+      } finally {
+        if (gateBtn) gateBtn.disabled = false;
+      }
+    }
+
+    if (gateBtn) gateBtn.addEventListener('click', tryUnlock);
+    if (gateInput) {
+      gateInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') tryUnlock();
+      });
+    }
+    if (lockBtn) {
+      lockBtn.addEventListener('click', function () {
+        setUnlocked(false);
+        showPrivate(false);
+        if (gateInput) gateInput.focus();
+        UI.toast('已锁定', 'info');
+      });
+    }
+
+    showPrivate(isUnlocked());
+
     /* ---------------------------------------------------- 3. 颜色预设 */
     document.querySelectorAll('[data-preset]').forEach(function (btn) {
       btn.addEventListener('click', function () {
@@ -174,8 +257,19 @@
     });
 
     /* ---------------------------------------------------- 4. 数据管理 */
-    document.getElementById('viewDataBtn').addEventListener('click', function () {
+    /** 本地存储快照，但把口令打码 —— 导出的文件、弹窗里都不该出现明文口令 */
+    function safeStoreAll() {
       const data = Store.all();
+      if (data.server && typeof data.server === 'object') {
+        data.server = Object.assign({}, data.server, {
+          token: data.server.token ? '***' : '',
+        });
+      }
+      return data;
+    }
+
+    document.getElementById('viewDataBtn').addEventListener('click', function () {
+      const data = safeStoreAll();
       const keys = Object.keys(data);
       if (!keys.length) { UI.toast('本地还没有任何设置', 'info'); return; }
       const lines = keys.map(function (k) { return k + ' = ' + JSON.stringify(data[k]); }).join('\n');
@@ -190,7 +284,7 @@
     });
 
     document.getElementById('exportBtn').addEventListener('click', function () {
-      const blob = new Blob([JSON.stringify(Store.all(), null, 2)], { type: 'application/json' });
+      const blob = new Blob([JSON.stringify(safeStoreAll(), null, 2)], { type: 'application/json' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = 'site-settings.json';

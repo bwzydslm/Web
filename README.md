@@ -121,7 +121,26 @@ Pages 项目 → **Custom domains** → **Set up a custom domain** → 输入域
 - 上传会自动压缩：浏览器端用 canvas 把最长边缩到 1600px、转成 WebP（GIF/SVG 跳过，压完更大则保留原图），质量由上传页的「压缩质量」滑块控制，通常能小 5～10 倍
 - 图片路径带可见性前缀：新图是 `pub/…` 或 `prv/…`，读取时**不查数据库**；公开图还会进 Cloudflare 边缘缓存，同一节点第二次打开几乎瞬时
 
-## 七、自检脚本（可选）
+## 七、安全与隐私
+
+**已经做到的**
+
+- **口令校验在后端**：上传、删除、改公告等所有写操作都由 `functions/_middleware.js` 校验 `SITE_TOKEN`，**没配口令时一律拒绝**（fail closed）
+- **CSP + 安全头**：`_headers` 里设了 `Content-Security-Policy`（只允许加载本站脚本，禁掉内联脚本和外部脚本）、`nosniff`、`X-Frame-Options`、`Referrer-Policy`、`Permissions-Policy`
+- **设置页的敏感板块要验证才显示**：「服务端 / API」和「数据管理」藏在一个「？？？」卡片后面，输入 `SITE_TOKEN` 并通过**后端**验证才展开；解锁状态只存在 `sessionStorage`，关掉标签页就失效
+- **口令不会外泄到导出文件**：设置页的「导出设置」和「数据统计」会把 token 打码成 `***`
+- **`/api/health` 对外只给粗粒度状态**（正常 / 异常 / 未配置），详细错误要带口令请求才看得到
+- **私密图片走服务端把关**：`prv/` 开头的文件必须带口令，其他人一律 404
+
+**你需要知道的**
+
+- ⚠️ **前端隐藏 ≠ 权限控制**。设置页那道口令门只是"藏起来"，真正拦住越权的是后端校验。会开 DevTools 的人能看到页面结构，但**看不到你的口令** —— 它只存在你自己的浏览器里，不会随网页发出去。
+- ⚠️ **仓库里的一切都能通过网址直接下载**：`README.md`、`docs/`、`schema.sql`、`_check.py`、`preview.bat`。里面没有任何密码，但会暴露站点架构。介意的话把这些开发文件挪到私有分支/仓库，线上只留 `*.html` + `assets/` + `functions/`。目前给它们加了 `X-Robots-Tag: noindex`，至少不会被搜索引擎收录。
+- ⚠️ **别把真实邮箱写进 `site.config.js`**：那是公开文件，会被爬虫抓走。页脚的 `mailto:you@example.com` 是占位符，记得别换成真邮箱（或换成表单/图片）。
+- ⚠️ **口令别写进 `wrangler.toml`**：仓库是公开的。本地开发用 `.dev.vars`（已被 `.gitignore` 忽略），线上用 Cloudflare 面板的 Secret。
+- ℹ️ `wrangler.toml` 里的 `database_id` **不是凭证**，公开它不能访问你的数据库，留着没事。
+
+## 八、自检脚本（可选）
 
 改完代码想确认没写坏，在项目根目录跑一次（需要电脑上有 Python）：
 
@@ -132,7 +151,7 @@ python _check.py
 它会检查：JS 括号是否闭合、HTML 里的元素 id 有没有被 JS 引用错、页面引用的本地文件是否存在、HTML 标签是否闭合。
 纯静态站点不需要它也能跑，删掉这个文件也不影响部署。
 
-## 八、接下来可以加的东西
+## 九、接下来可以加的东西
 
 - 关于我 / 友链 / 音乐 / 日记页面：复制 `index.html` 改名，在 `site.config.js` 的 `nav` 里加一项就能出现在侧边栏
 - 评论、访问统计：Cloudflare Web Analytics（免费、无 Cookie）或 Umami

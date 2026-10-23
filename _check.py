@@ -76,9 +76,11 @@ pages = {
     "settings.html": ["app.js", "page-settings.js"],
     "404.html": ["app.js"],
 }
-# 这些 id 由 app.js 在运行时动态插入，不该要求写在 HTML 里
+# 这些 id 由 app.js 在运行时动态插入，或者只在部分页面存在（有就绑定、没有就跳过），
+# 不该要求每个 HTML 里都写上
 DYNAMIC = {"themeToggle", "collapseBtn", "burgerBtn", "globalSearch", "recentPlaceholder", "loadMoreBtn",
-           "noticeInputTitle", "noticeInputBody", "noticeInputTags", "noticeStatus", "noticeSaveBtn", "noticeCancelBtn"}
+           "noticeInputTitle", "noticeInputBody", "noticeInputTags", "noticeStatus", "noticeSaveBtn", "noticeCancelBtn",
+           "fabTop"}
 
 for page, scripts in pages.items():
     html = (root / page).read_text(encoding="utf-8")
