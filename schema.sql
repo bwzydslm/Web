@@ -62,3 +62,20 @@ CREATE TABLE IF NOT EXISTS tracks (
 );
 
 CREATE INDEX IF NOT EXISTS idx_tracks_created ON tracks (created_at DESC);
+
+-- ============================================================================
+--  留言板：访客留言（匿名可写，其余写操作仍然需要口令）
+--  ip_hash 存的是 IP + 盐的哈希，不存原始 IP，用于限流和溯源
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS messages (
+  id         TEXT    PRIMARY KEY,
+  name       TEXT    NOT NULL DEFAULT '',
+  content    TEXT    NOT NULL DEFAULT '',
+  contact    TEXT    NOT NULL DEFAULT '',   -- 可选：邮箱 / 主页
+  ip_hash    TEXT    NOT NULL DEFAULT '',
+  created_at INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_messages_created ON messages (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_messages_ip      ON messages (ip_hash, created_at);

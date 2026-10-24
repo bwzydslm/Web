@@ -29,6 +29,7 @@ export default {
     { id: 'home',     label: '首页',   en: 'HOME',     icon: 'home',     to: '/',         title: '首页',   desc: '欢迎回来' },
     { id: 'wall',     label: '图墙',   en: 'GALLERY',  icon: 'image',    to: '/wall',     title: '图墙',   desc: '所有图片都在这里' },
     { id: 'music',    label: '音乐',   en: 'MUSIC',    icon: 'music',    to: '/music',    title: '音乐',   desc: '我的歌单' },
+    { id: 'guestbook', label: '留言板', en: 'GUESTBOOK', icon: 'message', to: '/guestbook', title: '留言板', desc: '留下点什么' },
     { id: 'upload',   label: '上传',   en: 'UPLOAD',   icon: 'upload',   to: '/upload',   title: '上传',   desc: '把新图片放进图墙' },
     { id: 'settings', label: '设置',   en: 'SETTINGS', icon: 'settings', to: '/settings', title: '设置',   desc: '按你的习惯调整一切' },
   ],
@@ -43,8 +44,8 @@ export default {
 
   /* ---------- 页脚 ---------- */
   footer: {
-    text: '© 2026 Amoyba的小屋',
-    note: '奇思妙想，天马行空的产物',
+    text: ' Amoyba的小屋',
+    note: 'D老师独家赞助',
     social: [
       { label: 'GitHub',    icon: 'github',    href: 'https://github.com/bwzydslm' },
       { label: 'Instagram', icon: 'instagram', href: '#' },
@@ -63,9 +64,9 @@ export default {
 
   /* ---------- 首页文案 ---------- */
   home: {
-    heroTitle: '这里是Bw_slime的个人空间',
+    heroTitle: 'o((>ω< ))o',
     heroText:
-      '你好 陌生人 很高兴你能访问我的web 你可以看看图片，听听音乐，希望你能在我的小世界玩得开心',
+      '泥嚎 ( •̀ ω •́ )y 祝你今天生活愉快',
     stats: [
       { label: '图片总数', value: '0', unit: '张' },
       { label: '占用空间', value: '0', unit: 'MB' },

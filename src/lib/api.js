@@ -158,6 +158,14 @@ export const Api = {
     return req('/api/tracks' + (qs ? '?' + qs : ''))
   },
   removeTrack: (id) => req('/api/tracks/' + encodeURIComponent(id), { method: 'DELETE' }),
+
+  /* 留言板：GET 与 POST 公开，DELETE 需要口令 */
+  messages: (params) => {
+    const qs = new URLSearchParams(params || {}).toString()
+    return req('/api/messages' + (qs ? '?' + qs : ''))
+  },
+  postMessage: (body) => req('/api/messages', { method: 'POST', body }),
+  removeMessage: (id) => req('/api/messages/' + encodeURIComponent(id), { method: 'DELETE' }),
 }
 
 export default Api

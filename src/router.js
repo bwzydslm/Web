@@ -30,6 +30,12 @@ const routes = [
     meta: { title: '音乐', desc: '我的歌单', nav: 'music' },
   },
   {
+    path: '/guestbook',
+    name: 'guestbook',
+    component: () => import('./views/GuestbookView.vue'),
+    meta: { title: '留言板', desc: '留下点什么', nav: 'guestbook' },
+  },
+  {
     path: '/upload',
     name: 'upload',
     component: () => import('./views/UploadView.vue'),

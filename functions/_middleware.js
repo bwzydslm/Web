@@ -44,7 +44,14 @@ export async function onRequest(context) {
   /* 只有写操作需要口令；GET 是公开的读取 */
   const isWrite = !['GET', 'HEAD', 'OPTIONS'].includes(method);
 
-  if (isWrite && !isAuthorized(request, env, url)) {
+  /* ★ 留言板是唯一允许匿名写入的接口。
+     这里的例外必须收得足够窄：只放行 POST /api/messages，
+     DELETE /api/messages/:id 仍然要口令。
+     防刷逻辑写在端点自己里面（见 functions/api/messages/index.js）。 */
+  const path = url.pathname.replace(/\/+$/, '');
+  const isPublicWrite = method === 'POST' && path === '/api/messages';
+
+  if (isWrite && !isPublicWrite && !isAuthorized(request, env, url)) {
     const configured = !!env.SITE_TOKEN;
     return new Response(
       JSON.stringify({

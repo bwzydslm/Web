@@ -16,6 +16,7 @@
 # SPA 路由
 /wall            /  200
 /music           /  200
+/guestbook       /  200
 /upload          /  200
 /settings        /  200
 

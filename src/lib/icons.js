@@ -18,6 +18,7 @@ export const ICONS = {
   instagram: '<rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><circle cx="12" cy="12" r="3.8"/><circle cx="16.9" cy="7.1" r="0.9" fill="currentColor" stroke="none"/>',
   bilibili: '<rect x="3" y="6" width="18" height="14" rx="3"/><path d="M8 3.5 10.5 6M16 3.5 13.5 6M8.5 11v3.5M15.5 11v3.5"/>',
   search: '<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/>',
+  message: '<path d="M20.5 11.5c0 4-3.8 7.2-8.5 7.2-1 0-2-.15-2.9-.43L4.5 20.5l1.3-3.5c-1.4-1.3-2.3-3.1-2.3-5.5 0-4 3.8-7.2 8.5-7.2s8.5 3.2 8.5 7.2Z"/>',
   menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
   panel: '<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M9.5 4.5v15"/>',
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.2M12 19.3v2.2M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"/>',
