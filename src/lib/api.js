@@ -151,6 +151,13 @@ export const Api = {
   note: (key) => req('/api/notes/' + encodeURIComponent(key)),
   saveNote: (key, data) => req('/api/notes/' + encodeURIComponent(key), { method: 'PUT', body: data }),
   removeNote: (key) => req('/api/notes/' + encodeURIComponent(key), { method: 'DELETE' }),
+
+  /* 音频：列表与删除（上传走同一个 /api/upload，带 kind: 'audio'） */
+  tracks: (params) => {
+    const qs = new URLSearchParams(params || {}).toString()
+    return req('/api/tracks' + (qs ? '?' + qs : ''))
+  },
+  removeTrack: (id) => req('/api/tracks/' + encodeURIComponent(id), { method: 'DELETE' }),
 }
 
 export default Api

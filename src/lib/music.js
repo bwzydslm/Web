@@ -8,6 +8,7 @@
  * ==========================================================================*/
 
 import { computed, reactive } from 'vue'
+import Api from './api'
 
 const state = reactive({
   ready: false,          // 歌单是否已加载
@@ -83,7 +84,45 @@ const currentLyric = computed(() =>
 
 /* ---------------- 歌单 ---------------- */
 
-export function loadPlaylist() {
+/** 云端歌单（/api/tracks）优先；拿不到再退回本地 playlist.json */
+export async function loadPlaylist() {
+  if (state.loading) return
+
+  state.loading = true
+  state.error = ''
+
+  let cloudTracks = []
+  try {
+    const res = await Api.tracks()
+    if (res && res.ok && Array.isArray(res.items)) {
+      cloudTracks = res.items.map((t) => ({
+        id: t.id,
+        name: t.name || '未命名',
+        artist: t.artist || '',
+        album: t.album || '',
+        duration: t.duration || 0,
+        src: Api.fileUrl(t.key),
+        lyrics: t.lyrics || '',
+      }))
+    }
+  } catch (e) {
+    /* 后端不可用就走本地，不打扰用户 */
+  }
+
+  if (cloudTracks.length) {
+    state.playlist = { name: '云端歌单', desc: '', cover: '', tracks: cloudTracks }
+    if (!state.queue.length) state.queue = cloudTracks.slice()
+    state.ready = true
+    state.loading = false
+    return
+  }
+
+  state.loading = false
+  return loadStaticPlaylist()
+}
+
+/** 本地歌单：public/music/playlist.json */
+function loadStaticPlaylist() {
   if (state.loading) return Promise.resolve()
   state.loading = true
   state.error = ''

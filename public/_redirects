@@ -6,21 +6,20 @@
 # 直接访问 /wall 这类地址时磁盘上没有对应文件，必须重写到 index.html，
 # 否则会 404 —— 前端路由根本没机会接管。
 #
-# ⚠ 故意不用「/* /index.html 200」这种全量兜底：
-#    那条会把 /assets/... 的请求也重写掉，CSS/JS 全挂。
-#    所以这里逐条列出，宁可漏也不要错。
+# ⚠ 两个坑（都踩过）：
+#   1) 目标必须写 "/"，不能写 "/index.html"。
+#      Cloudflare Pages 的 html_handling 会把 .html 规范化掉，
+#      写 /index.html 会被二次规范化成 "308 → /"，
+#      结果是直接访问 /wall 时被弹回首页。
+#   2) 不能用「/* / 200」全量兜底 —— 会把 /assets/* 也重写掉，CSS/JS 全挂。
 
-# 当前路由
-/wall            /index.html  200
-/music           /index.html  200
-/upload          /index.html  200
-/settings        /index.html  200
+# SPA 路由
+/wall            /  200
+/music           /  200
+/upload          /  200
+/settings        /  200
 
 # 老地址（改造前是 wall.html / upload.html / settings.html）
-/index.html      /index.html  200
-/wall.html       /index.html  200
-/upload.html     /index.html  200
-/settings.html   /index.html  200
-
-# 根路径
-/                /index.html  200
+/wall.html       /  200
+/upload.html     /  200
+/settings.html   /  200

@@ -40,3 +40,25 @@ CREATE TABLE IF NOT EXISTS notes (
   tags       TEXT    NOT NULL DEFAULT '',   -- 逗号分隔
   updated_at INTEGER NOT NULL
 );
+
+-- ============================================================================
+--  音频：上传到 R2 的音源，音乐页从 /api/tracks 拉取
+--  文件本身走 /api/file/<r2_key> 读取（支持 Range，所以进度条能拖动）
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS tracks (
+  id          TEXT    PRIMARY KEY,
+  r2_key      TEXT    NOT NULL UNIQUE,
+  name        TEXT    NOT NULL DEFAULT '',       -- 曲名
+  artist      TEXT    NOT NULL DEFAULT '',       -- 歌手
+  album       TEXT    NOT NULL DEFAULT '未分类',
+  duration    REAL    NOT NULL DEFAULT 0,        -- 秒
+  size        INTEGER NOT NULL DEFAULT 0,        -- 字节
+  mime        TEXT    NOT NULL DEFAULT '',
+  lyrics      TEXT    NOT NULL DEFAULT '',       -- 纯文本或 LRC
+  visibility  TEXT    NOT NULL DEFAULT 'public',
+  created_at  INTEGER NOT NULL,
+  updated_at  INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_tracks_created ON tracks (created_at DESC);

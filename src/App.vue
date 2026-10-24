@@ -16,6 +16,7 @@ import config from './config'
 import { applyAccent, applyMode, themePref } from './lib/theme'
 import { useSetting } from './lib/prefs'
 import { loadPlaylist } from './lib/music'
+import { navigating, prefetchRoutes } from './router'
 
 const route = useRoute()
 
@@ -61,6 +62,9 @@ onMounted(() => {
   /* 侧栏播放器在任何页面都要有数据，所以在壳层就把歌单拉起来 */
   loadPlaylist()
 
+  /* 首屏渲染完之后空闲预取其它路由的 chunk，减少第一次切页的等待 */
+  prefetchRoutes()
+
   document.addEventListener('keydown', onKeydown)
 
   /* 「跟随时间」模式下每 10 分钟重算一次，跨过 7:00 / 19:00 会自动切换 */
@@ -79,6 +83,9 @@ watch(themePref, (v) => applyMode(v))
 </script>
 
 <template>
+  <!-- 切页时的顶部进度条：懒加载 chunk 慢的时候给个反馈 -->
+  <div v-if="navigating" class="nav-bar" />
+
   <div class="layout">
     <SidebarNav />
     <div class="sidebar-backdrop" id="sidebarBackdrop" @click="closeDrawer" />
@@ -97,3 +104,24 @@ watch(themePref, (v) => applyMode(v))
 
   <button class="fab" type="button" title="回到顶部" @click="backToTop">↑</button>
 </template>
+
+<style scoped>
+.nav-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 9999;
+  background: var(--accent, #a78bfa);
+  transform-origin: left center;
+  animation: navbar 1.1s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes navbar {
+  0%   { transform: scaleX(0);    opacity: 0.9; }
+  55%  { transform: scaleX(0.65); opacity: 1; }
+  100% { transform: scaleX(1);    opacity: 0.3; }
+}
+</style>

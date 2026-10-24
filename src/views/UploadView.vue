@@ -12,6 +12,7 @@
 import { computed, onBeforeUnmount, reactive, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
+import AudioUpload from '../components/AudioUpload.vue'
 import Api from '../lib/api'
 import { Store } from '../lib/store'
 import { useSetting } from '../lib/prefs'
@@ -34,6 +35,8 @@ const USE_WEBP = (() => {
 /** 队列项：{ file, url, origSize, sent, sentSize, width, height, status, progress, error } */
 const queue = ref([])
 const uploading = ref(false)
+/** image | audio */
+const mode = ref('image')
 const uploadState = ref('等待中…')
 
 const quality = useSetting('upload.quality', 82)
@@ -358,7 +361,15 @@ onBeforeUnmount(() => {
       </template>
     </div>
 
-    <div class="upload-layout">
+    <!-- 图片 / 音频 切换 -->
+    <div class="seg" style="margin-bottom:14px">
+      <button type="button" :class="{ 'is-active': mode === 'image' }" @click="mode = 'image'">图片</button>
+      <button type="button" :class="{ 'is-active': mode === 'audio' }" @click="mode = 'audio'">音频</button>
+    </div>
+
+    <AudioUpload v-if="mode === 'audio'" />
+
+    <div v-if="mode === 'image'" class="upload-layout">
       <!-- ============ 左栏 ============ -->
       <div>
         <section class="card">
