@@ -1,49 +1,42 @@
 @echo off
 chcp 65001 >nul
-title 本地预览 - 个人网站
+title 本地开发 - 个人网站 (Vite)
 
 rem ============================================================
-rem  双击本文件即可在浏览器里预览本站
-rem  原理：把「本文件所在的文件夹」当成网站根目录起一个本地服务器
-rem  这样 assets/css、assets/js 这些相对路径才能正确加载
+rem  站已改为 Vite + Vue 单页应用，本地预览需要用 Vite 的 dev server。
+rem  它提供热更新，并且会把 /api 转发到线上，所以接口也能在本地调。
+rem
+rem  前提：需要安装 Node.js（https://nodejs.org/ ，选 LTS 版即可）。
 rem ============================================================
 
-rem 切到脚本所在目录（也就是项目根目录），关键的一步
 cd /d "%~dp0"
 
-set PORT=5173
-set URL=http://127.0.0.1:%PORT%/
+set URL=http://127.0.0.1:5173/
+
+where node >nul 2>nul
+if not %errorlevel%==0 (
+    echo.
+    echo   [x] 没有找到 Node.js，无法启动开发服务器。
+    echo.
+    echo   安装地址：https://nodejs.org/  （下载 LTS 版，一路下一步）
+    echo   装完关掉这个窗口重新双击即可。
+    echo.
+    echo   临时替代方案：先执行一次 npm run build，
+    echo   然后把 dist 目录用任意静态服务器托管。
+    echo.
+    pause
+    exit /b 1
+)
 
 echo.
 echo   项目目录：%CD%
 echo   预览地址：%URL%
-echo.
-echo   关闭这个黑窗口即可停止服务器。
+echo   关闭这个窗口即停止服务器。
 echo ------------------------------------------------------------
 echo.
 
-rem 优先用 py 启动器，没有再用 python
-where py >nul 2>nul
-if %errorlevel%==0 (
-    start "" "%URL%"
-    py -m http.server %PORT% --bind 127.0.0.1
-    goto :end
-)
+rem 延迟 3 秒再打开浏览器：Vite 起服务要一两秒，
+rem 先开浏览器会直接撞上 ERR_CONNECTION_REFUSED。
+start "" /min powershell -NoProfile -WindowStyle Hidden -Command "Start-Sleep -Seconds 3; Start-Process '%URL%'"
 
-where python >nul 2>nul
-if %errorlevel%==0 (
-    start "" "%URL%"
-    python -m http.server %PORT% --bind 127.0.0.1
-    goto :end
-)
-
-echo   [!] 没有找到 Python，无法启动本地服务器。
-echo.
-echo   替代方案（任选其一）：
-echo     1) 直接双击 index.html 用浏览器打开（file:// 方式，本站也能正常显示）
-echo     2) 安装 Python：https://www.python.org/downloads/
-echo     3) 装了 Node.js 的话，在本目录执行： npx serve .
-echo.
-pause
-
-:end
+call npm run dev

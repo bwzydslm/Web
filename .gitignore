@@ -6,16 +6,18 @@ desktop.ini
 .idea/
 *.log
 
-# Cloudflare / 本地开发
+# 依赖与构建产物
+node_modules/
+.pnpm-store/
+dist/
 .wrangler/
 .dev.vars
-node_modules/
+
+# 旧的 npm 锁文件；本项目用 pnpm，pnpm-lock.yaml 要提交
 package-lock.json
 
-# 构建产物（如果以后用框架，取消注释）
-# dist/
-# .astro/
-# public/
+# 注意：public/ 是源码目录（_headers / _redirects / assets 都在这），必须提交，
+#      不要写进这里。Vite 只忽略 dist/。
 
 # 交接文档：只留在本地，不进仓库、不上线
 # （里面写了架构细节、数据库 ID、已知问题，不该公开部署）

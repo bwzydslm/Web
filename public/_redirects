@@ -1,0 +1,26 @@
+# Cloudflare Pages 重定向 / 重写规则
+# 格式：来源 目标 [状态码]
+# 文档：https://developers.cloudflare.com/pages/configuration/redirects/
+#
+# 本站在 2026-10 改成了 SPA（Vue Router history 模式）。
+# 直接访问 /wall 这类地址时磁盘上没有对应文件，必须重写到 index.html，
+# 否则会 404 —— 前端路由根本没机会接管。
+#
+# ⚠ 故意不用「/* /index.html 200」这种全量兜底：
+#    那条会把 /assets/... 的请求也重写掉，CSS/JS 全挂。
+#    所以这里逐条列出，宁可漏也不要错。
+
+# 当前路由
+/wall            /index.html  200
+/music           /index.html  200
+/upload          /index.html  200
+/settings        /index.html  200
+
+# 老地址（改造前是 wall.html / upload.html / settings.html）
+/index.html      /index.html  200
+/wall.html       /index.html  200
+/upload.html     /index.html  200
+/settings.html   /index.html  200
+
+# 根路径
+/                /index.html  200

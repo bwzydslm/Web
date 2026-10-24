@@ -709,7 +709,7 @@ input[type='color'] { width: 40px; height: 26px; padding: 0; border: 1px solid v
 .lightbox {
   position: fixed; inset: 0; z-index: 60;
   display: grid; place-items: center;
-  padding: 40px;
+  padding: 20px;
   background: rgba(5, 3, 10, 0.82);
   backdrop-filter: blur(6px);
   opacity: 0; visibility: hidden;
@@ -721,10 +721,10 @@ input[type='color'] { width: 40px; height: 26px; padding: 0; border: 1px solid v
 .lightbox__stage {
   position: relative;
   display: grid; place-items: center;
-  max-width: min(1200px, 92vw);
-  max-height: 72vh;
+  max-width: 96vw;
+  max-height: calc(100vh - 128px);
   overflow: hidden;
-  border-radius: 12px;
+  border-radius: 0;
   touch-action: none;
   cursor: zoom-in;
 }
@@ -732,10 +732,10 @@ input[type='color'] { width: 40px; height: 26px; padding: 0; border: 1px solid v
 .lightbox__stage.is-dragging { cursor: grabbing; }
 
 .lightbox__img {
-  max-width: min(1200px, 92vw);
-  max-height: 72vh;
-  border-radius: 12px;
-  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.6);
+  max-width: 96vw;
+  max-height: calc(100vh - 128px);
+  border-radius: 0;
+  box-shadow: none;
   transform-origin: center center;
   will-change: transform;
   user-select: none;
@@ -759,6 +759,11 @@ input[type='color'] { width: 40px; height: 26px; padding: 0; border: 1px solid v
 .lightbox__pct:hover { color: var(--accent); border-color: var(--accent-line); }
 
 .lightbox__close { position: absolute; top: 22px; right: 24px; }
+
+/* 设置页「卡片背景微光」关闭时：由 App.vue 给 <html> 挂 no-glow */
+html.no-glow .card,
+html.no-glow .stat,
+html.no-glow .hero { box-shadow: none !important; }
 
 /* --------------------------------------------------------------- 上传页 */
 .dropzone {
@@ -995,8 +1000,8 @@ body::before {
 
 @font-face {
   font-family: 'PixelFont';
-  src: url('../fonts/pixel-12px.woff2') format('woff2'),
-       url('../fonts/pixel-12px.ttf') format('truetype');
+  src: url('/assets/fonts/pixel-12px.woff2') format('woff2'),
+       url('/assets/fonts/pixel-12px.ttf') format('truetype');
   font-display: swap;
 }
 

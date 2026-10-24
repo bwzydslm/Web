@@ -1,0 +1,7 @@
+{
+  "_comment": "本地歌单。音频文件放在 public/music/ 下，src 写服务器路径（如 /music/song1.mp3）。以后接网易云代理时，把 src 换成代理返回的地址即可。",
+  "name": "本地歌单",
+  "desc": "",
+  "cover": "",
+  "tracks": []
+}

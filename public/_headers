@@ -7,11 +7,11 @@
 
 # ---------- 安全头：所有文件 ----------
 # CSP 说明（注意：注释必须写在 /* 块外面，写进去会被当成非法头）：
-#   script-src 'self'      → 禁止内联脚本和外部脚本（行内 onclick 已搬进 app.js）
+#   script-src 'self'      → 禁止内联脚本和外部脚本
 #   style-src 允许 inline  → 页面里大量 style="..." 属性依赖它
 #   img-src 允许 blob:     → 上传页的图片预览用的是 blob URL
 #   connect-src 'self'     → 只允许请求本站 API；若把 API 放到别的域名要加进来
-#   frame-src              → 允许嵌入哪些站点的 iframe（目前放行网易云外链播放器，不想要就删掉）
+#   frame-src              → 允许嵌入哪些站点的 iframe（目前放行网易云外链播放器）
 /*
   X-Content-Type-Options: nosniff
   X-Frame-Options: SAMEORIGIN
@@ -19,28 +19,32 @@
   Permissions-Policy: geolocation=(), microphone=(), camera=(), interest-cohort=()
   Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-src https://music.163.com; object-src 'none'; base-uri 'none'; frame-ancestors 'self'
 
-# ---------- 页面与代码：不缓存 ----------
-# 作用：改完 HTML/CSS/JS 推送后，访客刷新就能拿到新版，不会看到几天前的旧样式。
-# 这些文件每次请求会带上校验，内容没变就返回 304，速度并不受影响。
+# ---------- 页面：不缓存 ----------
+# 作用：改完 HTML 推送后，访客刷新就能拿到新版，不会看到几天前的旧页面。
 /*.html
   Cache-Control: public, max-age=0, must-revalidate
 
-# ---------- CSS 给 120 秒缓存，JS 不缓存 ----------
-# 说明：`_headers` 里同一个头被两条规则命中时，值会被逗号拼接成畸形值，
-#       所以不能"先全局、再单独给某个文件开小灶"。这里只给 CSS 放宽，理由是：
-#         · CSS 是唯一「渲染阻塞」的静态资源，每次校验都会推迟首屏
-#         · JS 里含有 site.config.js（你经常改），保持不缓存才能改完立刻生效
-#       代价：改样式后最多 2 分钟内可能看到旧的，Ctrl+F5 可强制刷新。
+# ---------- CSS：文件名带 hash，可以永久缓存 ----------
+# Vite 构建出来的样式是 /assets/index-<hash>.css —— 内容一变文件名就变，
+# 所以放一年也不会读到旧的。
+#
+# 这里曾经是固定文件名 /assets/css/style.css + max-age=120 + stale-while-revalidate，
+# 结果刷新时会先把「旧样式」画出来再换成新的（视觉上就是闪一下旧版界面）。
+# 现在样式由 src/main.js import 引入，交给 Vite 出 hash 文件名，这个问题不存在了。
 /*.css
-  Cache-Control: public, max-age=120, stale-while-revalidate=86400
+  Cache-Control: public, max-age=31536000, immutable
 
+# ---------- JS：保持不缓存 ----------
+# 注意：public/assets/js/boot-theme.js 是**固定文件名**（不能加 hash，
+# 因为它在 <head> 里被同步引用，且必须在 Vue 之前执行），
+# 所以整条 *.js 规则不能设 immutable，否则改了这个文件永远不生效。
 /*.js
   Cache-Control: public, max-age=0, must-revalidate
 
-# ---------- Early Hints：提前预载渲染阻塞的资源 ----------
-# 浏览器收到 103 就开始拉 CSS，不用等 HTML 下载完，能省一个往返
-/*
-  Link: </assets/css/style.css>; rel=preload; as=style
+# ---------- 说明：为什么没有 Early Hints ----------
+# 之前这里有一条 Link: </assets/css/style.css>; rel=preload; as=style
+# 现在样式文件名带 hash，写死路径会 404，而且 preload 一个不存在的资源
+# 反而会拖慢首屏。要重新启用得让构建时动态生成，暂时不做。
 
 # ---------- 开发文档与脚本：不参与搜索引擎收录 ----------
 # 这些东西不包含密码，但会暴露站点架构，没必要被搜到
@@ -53,9 +57,6 @@
 /schema.sql
   X-Robots-Tag: noindex
 
-/_check.py
-  X-Robots-Tag: noindex
-
 # ---------- 图片：长缓存 ----------
 # 图片内容基本不变，缓存一年，回头客打开更快。
 # 注意：换图但文件名不变的话，访客可能看到旧图 —— 换图时建议换个新文件名。
@@ -63,7 +64,6 @@
   Cache-Control: public, max-age=31536000, immutable
 
 # ---------- 字体：长缓存 ----------
-# 像素字体文件 1~2MB，缓存一年，第二次访问直接读本地
 /*.woff2
   Cache-Control: public, max-age=31536000, immutable
 

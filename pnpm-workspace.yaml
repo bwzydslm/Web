@@ -1,0 +1,11 @@
+# pnpm 11 起，所有设置从 .npmrc / package.json 搬到了这里。
+
+# Windows 上默认用 Junction 链接依赖，Node 的 ESM 解析有时找不到
+# （表现为 ERR_MODULE_NOT_FOUND: Cannot find package 'rollup'）。
+# hoisted 会铺成扁平的实体目录，和 npm 一致，最稳。
+nodeLinker: hoisted
+
+# esbuild 的平台二进制由可选依赖 @esbuild/win32-x64 直接提供，
+# 不需要执行安装脚本；本机沙箱禁止 spawn 子进程，跑了会中断安装。
+allowBuilds:
+  esbuild: false
