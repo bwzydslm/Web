@@ -16,3 +16,7 @@ package-lock.json
 # dist/
 # .astro/
 # public/
+
+# 交接文档：只留在本地，不进仓库、不上线
+# （里面写了架构细节、数据库 ID、已知问题，不该公开部署）
+HANDOFF.md
