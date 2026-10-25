@@ -32,6 +32,20 @@ export const ICONS = {
   grid: '<rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/>',
   list: '<path d="M4 6.5h16M4 12h16M4 17.5h16"/>',
   chart: '<path d="M4 20V4"/><path d="M4 20h16"/><path d="M8 20v-6M12.5 20V9M17 20v-3.5"/>',
+
+  /* ---- 播放器 ---- */
+  play: '<path d="M7.5 4.8 19 12 7.5 19.2Z" fill="currentColor" stroke="none"/>',
+  pause: '<rect x="7" y="4.8" width="3.4" height="14.4" rx="1.2" fill="currentColor" stroke="none"/><rect x="13.6" y="4.8" width="3.4" height="14.4" rx="1.2" fill="currentColor" stroke="none"/>',
+  prev: '<path d="M18.5 5.2 9 12l9.5 6.8Z" fill="currentColor" stroke="none"/><rect x="4" y="5" width="2.4" height="14" rx="1.1" fill="currentColor" stroke="none"/>',
+  next: '<path d="M5.5 5.2 15 12l-9.5 6.8Z" fill="currentColor" stroke="none"/><rect x="17.6" y="5" width="2.4" height="14" rx="1.1" fill="currentColor" stroke="none"/>',
+  repeat: '<path d="M7 7.5h9.5A3.5 3.5 0 0 1 20 11v1"/><path d="m8.5 5 -2 2.5 2 2.5"/><path d="M17 16.5H7.5A3.5 3.5 0 0 1 4 13v-1"/><path d="m15.5 19 2-2.5-2-2.5"/>',
+  'repeat-one': '<path d="M7 7.5h9.5A3.5 3.5 0 0 1 20 11v1"/><path d="m8.5 5 -2 2.5 2 2.5"/><path d="M17 16.5H7.5A3.5 3.5 0 0 1 4 13v-1"/><path d="m15.5 19 2-2.5-2-2.5"/><path d="M12.4 9.6v4.8M11 10.6l1.4-1"/>',
+  shuffle: '<path d="M4 7h3.2a4 4 0 0 1 3.3 1.8l3 4.4A4 4 0 0 0 16.8 15H20"/><path d="M4 17h3.2a4 4 0 0 0 3.3-1.8l.6-.9"/><path d="M14.4 9.9l.5-.8A4 4 0 0 1 16.8 9H20"/><path d="m17.6 6.5 2.4 2.5-2.4 2.5"/><path d="m17.6 12.5 2.4 2.5-2.4 2.5"/>',
+  volume: '<path d="M4 9.5h3l4.2-3.4v11.8L7 14.5H4Z"/><path d="M15 9.2a4 4 0 0 1 0 5.6"/><path d="M17.6 6.8a7.2 7.2 0 0 1 0 10.4"/>',
+  'volume-mute': '<path d="M4 9.5h3l4.2-3.4v11.8L7 14.5H4Z"/><path d="m15.5 9.5 4.5 5M20 9.5l-4.5 5"/>',
+  'volume-low': '<path d="M4 9.5h3l4.2-3.4v11.8L7 14.5H4Z"/><path d="M15 9.2a4 4 0 0 1 0 5.6"/>',
+  lyric: '<path d="M4 6.5h9M4 11h13M4 15.5h7"/><circle cx="18" cy="17" r="2.2"/><path d="M20.2 17v-4.4"/>',
+  heart: '<path d="M12 20.2S3.8 15 3.8 9.6A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 8.2 2.4c0 5.4-8.2 10.6-8.2 10.6Z"/>',
 }
 
 export default ICONS

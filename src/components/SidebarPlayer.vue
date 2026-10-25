@@ -4,10 +4,14 @@
  *
  *  复用 .mini-card 的外壳（含展开/收起两套行为），只把内容换成播放控制。
  *  收起态（html.sidebar-collapsed）下退化成一颗圆形播放键。
+ *
+ *  与音乐页的 NowPlaying 共用 lib/music.js 的同一份状态：
+ *  在任意一处改音量 / 播放模式，另一边立刻同步。
  * ==========================================================================*/
 
 import { computed, onMounted } from 'vue'
 import AppIcon from './AppIcon.vue'
+import PlayerSlider from './PlayerSlider.vue'
 import {
   currentTrack,
   fmtTime,
@@ -16,9 +20,10 @@ import {
   music,
   next,
   prev,
-  progress,
   seek,
+  setMode,
   toggle,
+  MODE_META,
 } from '../lib/music'
 
 onMounted(() => {
@@ -32,10 +37,10 @@ const sub = computed(() => {
   return currentTrack.value.artist || '未知歌手'
 })
 
-const pct = computed(() => progress.value * 100)
+const modeMeta = computed(() => MODE_META[music.mode] || MODE_META.list)
 
-function onSeek(e) {
-  seek(Number(e.target.value))
+function onSeek(sec) {
+  seek(sec)
 }
 </script>
 
@@ -43,7 +48,7 @@ function onSeek(e) {
   <div class="mini-card sp" :class="{ 'sp--idle': !hasTrack }">
     <!-- 收起态只显示这一颗键 -->
     <button class="sp__mini" type="button" :title="music.playing ? '暂停' : '播放'" @click="toggle">
-      <span>{{ music.playing ? '❚❚' : '▶' }}</span>
+      <AppIcon :name="music.playing ? 'pause' : 'play'" :size="14" />
     </button>
 
     <!-- 展开态 -->
@@ -60,25 +65,40 @@ function onSeek(e) {
     </div>
 
     <div class="sp__ctrl">
-      <button class="sp__btn" type="button" title="上一首" @click="prev">⏮</button>
-      <button class="sp__btn sp__btn--main" type="button" :title="music.playing ? '暂停' : '播放'" @click="toggle">
-        {{ music.playing ? '❚❚' : '▶' }}
+      <button class="sp__btn" type="button" title="上一首" @click="prev">
+        <AppIcon name="prev" :size="12" />
       </button>
-      <button class="sp__btn" type="button" title="下一首" @click="next">⏭</button>
+      <button class="sp__btn sp__btn--main" type="button" :title="music.playing ? '暂停' : '播放'" @click="toggle">
+        <AppIcon :name="music.playing ? 'pause' : 'play'" :size="13" />
+      </button>
+      <button class="sp__btn" type="button" title="下一首" @click="next">
+        <AppIcon name="next" :size="12" />
+      </button>
+      <button
+        class="sp__btn sp__btn--mode"
+        type="button"
+        :title="modeMeta.label + '（点击切换）'"
+        @click="setMode('cycle')"
+      >
+        <AppIcon :name="modeMeta.icon" :size="12" />
+      </button>
       <span class="sp__time">{{ fmtTime(music.currentTime) }}</span>
     </div>
 
-    <input
-      class="sp__bar"
-      type="range"
-      min="0"
-      :max="music.duration || 0"
-      step="0.1"
-      :value="music.currentTime"
-      :style="{ '--pct': pct + '%' }"
-      :disabled="!hasTrack"
-      @input="onSeek"
-    >
+    <!-- 包一层，方便收起态整体隐藏（子组件根节点不便用 :deep 选择） -->
+    <div class="sp__seek">
+      <PlayerSlider
+        compact
+        :model-value="music.currentTime"
+        :max="music.duration"
+        :buffered="music.buffered"
+        :disabled="!hasTrack || !music.duration"
+        :format="fmtTime"
+        :step="5"
+        label="播放进度"
+        @seek="onSeek"
+      />
+    </div>
   </div>
 </template>
 
@@ -99,7 +119,6 @@ function onSeek(e) {
   border: 1px solid var(--accent-line, rgba(167, 139, 250, 0.38));
   background: var(--accent-soft, rgba(167, 139, 250, 0.16));
   color: var(--accent, #a78bfa);
-  font-size: 11px;
   cursor: pointer;
 }
 
@@ -112,7 +131,6 @@ function onSeek(e) {
 .sp__cover {
   width: 36px;
   height: 36px;
-  font-size: 15px;
   overflow: hidden;
 }
 .sp__cover img {
@@ -127,7 +145,7 @@ function onSeek(e) {
 .sp__ctrl {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
 }
 .sp__btn {
   flex: 0 0 auto;
@@ -139,7 +157,6 @@ function onSeek(e) {
   border: 1px solid var(--line, rgba(255, 255, 255, 0.14));
   background: transparent;
   color: inherit;
-  font-size: 10px;
   line-height: 1;
   cursor: pointer;
   transition: border-color 0.15s ease, color 0.15s ease;
@@ -155,41 +172,19 @@ function onSeek(e) {
   color: var(--accent, #a78bfa);
   background: var(--accent-soft, rgba(167, 139, 250, 0.16));
 }
-.sp__time {
+/* 模式键：无边框，弱化处理，避免和下排三个主控抢注意力 */
+.sp__btn--mode {
+  border-color: transparent;
+  color: var(--muted, #8c8c97);
   margin-left: auto;
+}
+.sp__btn--mode:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+.sp__time {
   font-size: 10px;
   opacity: 0.45;
   font-variant-numeric: tabular-nums;
-}
-
-/* 细进度条 */
-.sp__bar {
-  width: 100%;
-  appearance: none;
-  height: 3px;
-  border-radius: 999px;
-  cursor: pointer;
-  background: linear-gradient(
-    to right,
-    var(--accent, #a78bfa) 0%,
-    var(--accent, #a78bfa) var(--pct, 0%),
-    rgba(255, 255, 255, 0.16) var(--pct, 0%),
-    rgba(255, 255, 255, 0.16) 100%
-  );
-}
-.sp__bar:disabled {
-  opacity: 0.35;
-  cursor: default;
-}
-.sp__bar::-webkit-slider-thumb {
-  appearance: none;
-  width: 0;
-  height: 0;
-}
-.sp__bar::-moz-range-thumb {
-  width: 0;
-  height: 0;
-  border: none;
 }
 
 /* ---------- 收起态：只剩一颗圆键 ---------- */
@@ -200,7 +195,7 @@ html.sidebar-collapsed .sp {
 }
 html.sidebar-collapsed .sp__row,
 html.sidebar-collapsed .sp__ctrl,
-html.sidebar-collapsed .sp__bar {
+html.sidebar-collapsed .sp__seek {
   display: none;
 }
 html.sidebar-collapsed .sp__mini {

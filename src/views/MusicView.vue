@@ -2,35 +2,39 @@
 /* ============================================================================
  *  MusicView.vue —— 音乐页
  *
- *  版面参考了常见的「歌单 + 播放列表 + 歌词」三块式布局；
- *  配色沿用本站的黑白 + 强调色，没有照搬参考站的深蓝紫。
+ *  版面（网易云式的「主面板 + 侧栏」）：
+ *    ┌───────────────────────────────┬──────────────┐
+ *    │ 正在播放细则                    │ 播放列表      │
+ *    │  歌单条（名称/简介/播放全部）    │  搜索        │
+ *    │  封面 + 曲目信息 │ 滚动歌词      │  歌曲行 ×N   │
+ *    │  进度条                        │              │
+ *    │  模式 / 上一首 播放 下一首 / 音量  │              │
+ *    └───────────────────────────────┴──────────────┘
  *
- *  当前音频来源：本地歌单（public/music/playlist.json）。
- *  接网易云代理时，只需让 playlist.json 的 src 指向代理地址，
- *  或者在 loadPlaylist() 里换成从代理拉。
+ *  播放细则全在 NowPlaying.vue，列表与搜索留在本页；两边共用 lib/music.js
+ *  的同一份状态，所以和侧栏播放器永远同步。
  * ==========================================================================*/
 
 import { computed, onMounted, ref } from 'vue'
 import AppIcon from '../components/AppIcon.vue'
-import { useSetting } from '../lib/prefs'
+import NowPlaying from '../components/NowPlaying.vue'
 import {
   insertAndPlay,
   loadPlaylist,
   music,
   playAt,
   fmtTime,
-  currentLyricIndex,
+  setMode,
 } from '../lib/music'
 
-const quality = useSetting('music.quality', '较高')
-const QUALITIES = ['标准', '较高', '极高']
-
 const keyword = ref('')
-const searching = ref(false)
 const results = ref([])
 
 const tracks = computed(() => (music.playlist && music.playlist.tracks) || [])
 const isEmpty = computed(() => !music.queue.length)
+/** 有搜索词就一直显示搜索结果，清空就回到完整列表 */
+const showing = computed(() => (keyword.value.trim() ? results.value : music.queue))
+const isSearching = computed(() => !!keyword.value.trim())
 
 onMounted(() => {
   if (!music.ready) loadPlaylist()
@@ -41,15 +45,17 @@ function playAll() {
   playAt(0)
 }
 
-function shuffle() {
+/** 随便听听：切到随机模式并随机起一首 */
+function shufflePlay() {
   if (!music.queue.length) return
+  setMode('shuffle')
   playAt(Math.floor(Math.random() * music.queue.length))
 }
 
+/** 输入即搜（本地过滤，数据量小，不做防抖也够快） */
 function doSearch() {
   const q = keyword.value.trim().toLowerCase()
   if (!q) { results.value = []; return }
-  searching.value = true
   results.value = tracks.value.filter((t) => {
     const hay = (t.name + ' ' + t.artist + ' ' + t.album).toLowerCase()
     return hay.indexOf(q) !== -1
@@ -59,16 +65,25 @@ function doSearch() {
 function clearSearch() {
   keyword.value = ''
   results.value = []
-  searching.value = false
 }
 
+/** 搜索结果里点一首：插入队列并立刻播 */
 function pick(track) {
-  insertAndPlay(track, true)
+  const i = insertAndPlay(track, true)
   clearSearch()
+  return i
 }
 
-function isCurrent(track, i) {
-  return music.queue[music.index] && music.queue[music.index].id === track.id
+/** 列表里的一行：搜索结果走插入逻辑，播放队列里走 playAt */
+function onRow(i) {
+  if (isSearching.value) pick(showing.value[i])
+  else playAt(i)
+}
+
+/** 判断这一行是不是当前在播（搜索结果也要能高亮） */
+function isCurrent(t, i) {
+  if (isSearching.value) return music.index >= 0 && music.queue[music.index] && music.queue[music.index].id === t.id
+  return i === music.index
 }
 </script>
 
@@ -83,116 +98,109 @@ function isCurrent(track, i) {
       <h1 class="mp-title">音乐</h1>
     </header>
 
-    <!-- ================= 歌单卡 ================= -->
-    <section class="card mp-album">
-      <div class="card__body mp-album__inner">
-        <div class="mp-album__cover">
-          <img v-if="music.playlist && music.playlist.cover" :src="music.playlist.cover" alt="">
-          <AppIcon v-else name="music" :size="26" />
+    <div class="mp-stage">
+      <!-- ================= 主面板：播放细则 ================= -->
+      <section class="card mp-now">
+        <div class="card__head">
+          <span class="card__title">
+            <AppIcon name="music" :size="14" />
+            正在播放
+          </span>
+          <span class="card__hint">
+            {{ music.playing ? '播放中' : '已暂停' }}
+          </span>
         </div>
 
-        <div class="mp-album__info">
-          <h2 class="mp-album__name">
-            {{ music.playlist ? music.playlist.name : '正在载入歌单…' }}
-          </h2>
-          <p class="mp-album__sub">
-            {{ (music.playlist && music.playlist.desc) || '这个歌单没有写简介。' }}
-          </p>
-
-          <div class="mp-album__actions">
-            <button class="btn btn--primary" type="button" :disabled="isEmpty" @click="playAll">播放全部</button>
-            <button class="btn" type="button" :disabled="isEmpty" @click="shuffle">随便听听</button>
-            <select v-model="quality" class="select mp-quality">
-              <option v-for="q in QUALITIES" :key="q" :value="q">{{ q }}音质</option>
-            </select>
+        <div class="card__body mp-now__body">
+          <!-- 歌单条：原来独立成卡的歌单信息，压成一条横带嵌进主板 -->
+          <div class="mp-strip">
+            <div class="mp-strip__cover">
+              <img v-if="music.playlist && music.playlist.cover" :src="music.playlist.cover" alt="">
+              <AppIcon v-else name="music" :size="15" />
+            </div>
+            <div class="mp-strip__info">
+              <div class="mp-strip__name">
+                {{ music.playlist ? music.playlist.name : '正在载入歌单…' }}
+              </div>
+              <div class="mp-strip__sub">
+                {{ (music.playlist && music.playlist.desc) || '共 ' + tracks.length + ' 首曲目' }}
+              </div>
+            </div>
+            <div class="mp-strip__actions">
+              <button class="btn btn--sm btn--primary" type="button" :disabled="isEmpty" @click="playAll">
+                播放全部
+              </button>
+              <button class="btn btn--sm" type="button" :disabled="isEmpty" @click="shufflePlay">
+                随便听听
+              </button>
+            </div>
           </div>
 
-          <p v-if="music.playlist && music.playlist.desc" class="mp-album__count">
-            共 {{ tracks.length }} 首
-          </p>
+          <NowPlaying />
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- ================= 搜索 ================= -->
-    <div class="mp-search">
-      <input
-        v-model="keyword"
-        class="input mp-search__input"
-        type="search"
-        placeholder="搜歌名、歌手"
-        @keydown.enter="doSearch"
-      >
-      <button class="btn" type="button" @click="doSearch">搜索</button>
-      <button v-if="results.length || keyword" class="btn btn--ghost" type="button" @click="clearSearch">清除</button>
-    </div>
-
-    <div v-if="searching" class="mp-results card">
-      <div class="card__body card__body--flush">
-        <div v-if="!results.length" class="mp-empty">没有匹配的歌曲</div>
-        <button
-          v-for="t in results"
-          :key="t.id"
-          class="mp-row"
-          type="button"
-          @click="pick(t)"
-        >
-          <span class="mp-row__name">{{ t.name }}</span>
-          <span class="mp-row__artist">{{ t.artist || '未知歌手' }}</span>
-          <span class="mp-row__dur">{{ fmtTime(t.duration) }}</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- ================= 播放列表 + 歌词 ================= -->
-    <div class="mp-grid">
-      <section class="card">
+      <!-- ================= 侧栏：播放列表 ================= -->
+      <aside class="card mp-side">
         <div class="card__head">
-          <span class="card__title">播放列表</span>
-          <span class="card__hint">{{ music.queue.length }} 首</span>
+          <span class="card__title">{{ isSearching ? '搜索结果' : '播放列表' }}</span>
+          <span class="card__hint">{{ showing.length }} 首</span>
         </div>
-        <div class="card__body card__body--flush">
-          <div v-if="isEmpty" class="mp-empty mp-empty--tall">
+
+        <div class="mp-side__search">
+          <div class="mp-search">
+            <AppIcon name="search" :size="13" class="mp-search__icon" />
+            <input
+              v-model="keyword"
+              class="input mp-search__input"
+              type="search"
+              placeholder="搜歌名、歌手、专辑"
+              @input="doSearch"
+            >
+            <button
+              v-if="keyword"
+              class="mp-search__clear"
+              type="button"
+              title="清除"
+              @click="clearSearch"
+            >×</button>
+          </div>
+        </div>
+
+        <div class="card__body card__body--flush mp-side__list">
+          <div v-if="isEmpty && !isSearching" class="mp-empty mp-empty--tall">
             <div class="mp-empty__title">播放列表是空的</div>
+            <div>去上传页传一首，或在设置里检查歌单来源</div>
+          </div>
+          <div v-else-if="isSearching && !showing.length" class="mp-empty">
+            没有匹配的歌曲
           </div>
 
           <template v-else>
             <button
-              v-for="(t, i) in music.queue"
-              :key="t.id"
+              v-for="(t, i) in showing"
+              :key="t.id + '-' + i"
               class="mp-row"
-              :class="{ 'is-current': i === music.index }"
+              :class="{ 'is-current': isCurrent(t, i) }"
               type="button"
-              @click="playAt(i)"
+              @click="onRow(i)"
             >
-              <span class="mp-row__idx">{{ String(i + 1).padStart(2, '0') }}</span>
-              <span class="mp-row__name">{{ t.name }}</span>
-              <span class="mp-row__artist">{{ t.artist || '未知歌手' }}</span>
+              <span class="mp-row__idx">
+                <!-- 正在播的那行，序号换成跳动的音柱 -->
+                <span v-if="isCurrent(t, i) && music.playing" class="mp-bars">
+                  <i /><i /><i />
+                </span>
+                <template v-else>{{ String(i + 1).padStart(2, '0') }}</template>
+              </span>
+              <span class="mp-row__main">
+                <span class="mp-row__name">{{ t.name }}</span>
+                <span class="mp-row__artist">{{ t.artist || '未知歌手' }}</span>
+              </span>
               <span class="mp-row__dur">{{ fmtTime(t.duration) }}</span>
             </button>
           </template>
         </div>
-      </section>
-
-      <section class="card mp-lyrics">
-        <div class="card__head">
-          <span class="card__title">歌词</span>
-          <span v-if="music.lyrics.length" class="card__hint">{{ music.lyrics.length }} 行</span>
-        </div>
-        <div class="card__body">
-          <div v-if="!music.lyrics.length" class="mp-empty">暂无歌词</div>
-          <div v-else class="mp-lyrics__body">
-            <p
-              v-for="(line, i) in music.lyrics"
-              :key="i"
-              class="mp-lyrics__line"
-              :class="{ 'is-active': i === currentLyricIndex }"
-            >
-              {{ line.text }}
-            </p>
-          </div>
-        </div>
-      </section>
+      </aside>
     </div>
   </div>
 </template>
@@ -231,80 +239,159 @@ function isCurrent(track, i) {
   margin: 0 0 6px;
 }
 
-/* ---------- 歌单卡 ---------- */
-.mp-album__inner {
-  display: flex;
-  gap: 20px;
-  align-items: flex-start;
+/* ---------- 主面板 + 侧栏 ---------- */
+.mp-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 16px;
+  align-items: start;
 }
-.mp-album__cover {
-  width: 116px;
-  height: 116px;
+
+.mp-now .card__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.mp-now__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ---------- 歌单条 ---------- */
+.mp-strip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid var(--line-soft, rgba(255, 255, 255, 0.07));
+}
+.mp-strip__cover {
+  width: 34px;
+  height: 34px;
   flex: 0 0 auto;
-  border-radius: 12px;
+  border-radius: 8px;
   display: grid;
   place-items: center;
+  overflow: hidden;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--line, rgba(255, 255, 255, 0.1));
   color: var(--accent, #a78bfa);
-  overflow: hidden;
 }
-.mp-album__cover img {
+.mp-strip__cover img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-.mp-album__info {
+.mp-strip__info {
   min-width: 0;
   flex: 1 1 auto;
 }
-.mp-album__name {
-  font-size: 18px;
-  font-weight: 700;
-  margin: 2px 0 6px;
+.mp-strip__name {
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.mp-album__sub {
-  margin: 0 0 14px;
-  font-size: 12px;
-  line-height: 1.7;
-  opacity: 0.6;
+.mp-strip__sub {
+  font-size: 11px;
+  line-height: 1.6;
+  opacity: 0.55;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.mp-album__actions {
+.mp-strip__actions {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-.mp-quality {
-  width: auto;
-}
-.mp-album__count {
-  margin: 10px 0 0;
-  font-size: 11px;
-  opacity: 0.45;
+  gap: 8px;
 }
 
-/* ---------- 搜索 ---------- */
-.mp-search {
+/* ---------- 侧栏列表 ---------- */
+.mp-side {
+  position: sticky;
+  top: 16px;
   display: flex;
-  gap: 10px;
+  flex-direction: column;
+  max-height: calc(100vh - 120px);
+}
+.mp-side__search {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line-soft, rgba(255, 255, 255, 0.07));
+}
+.mp-side__list {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line, #35353d) transparent;
+  min-height: 160px;
+}
+.mp-side__list::-webkit-scrollbar {
+  width: 6px;
+}
+.mp-side__list::-webkit-scrollbar-thumb {
+  background: var(--line, #35353d);
+  border-radius: 999px;
+}
+
+/* 搜索框 */
+.mp-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.mp-search__icon {
+  position: absolute;
+  left: 10px;
+  opacity: 0.45;
+  pointer-events: none;
 }
 .mp-search__input {
-  flex: 1 1 auto;
+  width: 100%;
+  padding-left: 30px;
+  padding-right: 28px;
+  height: 30px;
+  font-size: 12px;
 }
-.mp-results {
-  margin-top: -6px;
+/* 去掉 type=search 自带的那个叉，用自己的 */
+.mp-search__input::-webkit-search-cancel-button {
+  display: none;
+}
+.mp-search__clear {
+  position: absolute;
+  right: 6px;
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.09);
+  color: var(--muted, #8c8c97);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+}
+.mp-search__clear:hover {
+  color: var(--text, #f5f5f7);
+  background: rgba(255, 255, 255, 0.16);
 }
 
 /* ---------- 列表行 ---------- */
 .mp-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   width: 100%;
-  padding: 10px 16px;
+  padding: 8px 14px;
   border: none;
-  border-bottom: 1px solid var(--line, rgba(255, 255, 255, 0.07));
+  border-bottom: 1px solid var(--line-soft, rgba(255, 255, 255, 0.07));
   background: transparent;
   color: inherit;
   font: inherit;
@@ -327,33 +414,66 @@ function isCurrent(track, i) {
   font-weight: 600;
 }
 .mp-row__idx {
-  width: 24px;
+  width: 20px;
   flex: 0 0 auto;
   font-size: 11px;
   opacity: 0.4;
   font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: center;
 }
-.mp-row__name {
+.mp-row.is-current .mp-row__idx {
+  opacity: 1;
+}
+.mp-row__main {
   flex: 1 1 auto;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mp-row__name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .mp-row__artist {
-  flex: 0 0 auto;
-  max-width: 180px;
+  font-size: 11px;
+  opacity: 0.5;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 11.5px;
-  opacity: 0.55;
 }
 .mp-row__dur {
   flex: 0 0 auto;
   font-size: 11px;
   opacity: 0.4;
   font-variant-numeric: tabular-nums;
+}
+
+/* 播放中的音柱：三根轮流伸缩 */
+.mp-bars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 11px;
+}
+.mp-bars i {
+  width: 2px;
+  border-radius: 1px;
+  background: var(--accent, #a78bfa);
+  animation: mp-bounce 0.9s ease-in-out infinite;
+}
+.mp-bars i:nth-child(1) { height: 60%; animation-delay: -0.2s; }
+.mp-bars i:nth-child(2) { height: 100%; animation-delay: -0.5s; }
+.mp-bars i:nth-child(3) { height: 40%; animation-delay: 0s; }
+
+@keyframes mp-bounce {
+  0%, 100% { transform: scaleY(0.45); }
+  50% { transform: scaleY(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mp-bars i { animation: none; }
 }
 
 /* ---------- 空状态 ---------- */
@@ -373,39 +493,26 @@ function isCurrent(track, i) {
   margin-bottom: 6px;
 }
 
-/* ---------- 两栏 ---------- */
-.mp-grid {
-  display: grid;
-  grid-template-columns: 1.55fr 1fr;
-  gap: 16px;
-  align-items: start;
-}
+/* ---------- 窄屏：侧栏落到下面 ---------- */
 @media (max-width: 1000px) {
-  .mp-grid {
-    grid-template-columns: 1fr;
+  .mp-stage {
+    grid-template-columns: minmax(0, 1fr);
   }
-  .mp-album__inner {
-    flex-direction: column;
+  .mp-side {
+    position: static;
+    max-height: none;
+  }
+  .mp-side__list {
+    max-height: 420px;
   }
 }
 
-/* ---------- 歌词 ---------- */
-.mp-lyrics__body {
-  max-height: 420px;
-  overflow-y: auto;
-  padding: 4px 0;
-}
-.mp-lyrics__line {
-  margin: 0;
-  padding: 5px 16px;
-  font-size: 12.5px;
-  line-height: 1.6;
-  opacity: 0.5;
-  transition: opacity 0.2s ease, color 0.2s ease;
-}
-.mp-lyrics__line.is-active {
-  opacity: 1;
-  color: var(--accent, #a78bfa);
-  font-weight: 600;
+@media (max-width: 700px) {
+  .mp-strip {
+    flex-wrap: wrap;
+  }
+  .mp-strip__actions {
+    width: 100%;
+  }
 }
 </style>
