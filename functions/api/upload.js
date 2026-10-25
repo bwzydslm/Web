@@ -71,12 +71,6 @@ async function handleAudio({ form, files, env, visibility, now }) {
 
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
-    if (file.size > MAX_AUDIO) {
-      return json(
-        { ok: false, error: 'file_too_large', message: file.name + ' 超过 50MB 上限' },
-        413
-      );
-    }
 
     const id = crypto.randomUUID();
     const mime = file.type || 'application/octet-stream';
@@ -146,6 +140,22 @@ export async function onRequestPost({ request, env }) {
   const now = Date.now();
   const kind = form.get('kind') === 'audio' ? 'audio' : 'image';
 
+  /* ★ 先全量预校验，再动 R2 / D1：
+     原来是逐个文件边写边查，一次传 5 个、第 3 个超限时，前 2 个已经入库，
+     接口却返回 413 —— 前端一重试就重复入库。现在超限直接整体拒绝。 */
+  const max = kind === 'audio' ? MAX_AUDIO : MAX_IMAGE;
+  const oversized = files.find((f) => f.size > max);
+  if (oversized) {
+    return json(
+      {
+        ok: false,
+        error: 'file_too_large',
+        message: oversized.name + ' 超过 ' + max / 1024 / 1024 + 'MB 上限（已全部拒绝，本次没有写入任何文件）',
+      },
+      413
+    );
+  }
+
   if (kind === 'audio') {
     return handleAudio({ form, files, env, visibility, now });
   }
@@ -172,12 +182,6 @@ export async function onRequestPost({ request, env }) {
 
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
-    if (file.size > MAX_IMAGE) {
-      return json(
-        { ok: false, error: 'file_too_large', message: file.name + ' 超过 25MB 上限' },
-        413
-      );
-    }
 
     const id = crypto.randomUUID();
     const mime = file.type || 'application/octet-stream';

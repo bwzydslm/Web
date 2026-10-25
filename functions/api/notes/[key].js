@@ -13,6 +13,8 @@
  * ---------------------------------------------------------------------------
  */
 
+import { isAuthorized, errorBody } from '../../_lib/auth.js';
+
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), {
     status,
@@ -32,20 +34,17 @@ function toNote(row) {
   };
 }
 
-export async function onRequestGet({ env, params }) {
+export async function onRequestGet({ request, env, params }) {
   if (!env.DB) return json({ ok: false, error: 'db_not_bound', message: 'D1 绑定 DB 没有配置' }, 500);
 
   try {
     const row = await env.DB.prepare('SELECT * FROM notes WHERE note_key = ?').bind(params.key).first();
     return json({ ok: true, note: toNote(row) }); // 没有内容时 note 为 null，前端会退回默认文案
   } catch (e) {
+    /* 匿名访客只看到笼统提示 */
+    const authed = isAuthorized(request, env, new URL(request.url));
     return json(
-      {
-        ok: false,
-        error: 'query_failed',
-        message: e && e.message ? e.message : String(e),
-        hint: '如果提示 no such table: notes，说明要重新执行一次 schema.sql',
-      },
+      errorBody(authed, 'query_failed', e, '如果提示 no such table: notes，说明要重新执行一次 schema.sql'),
       500
     );
   }

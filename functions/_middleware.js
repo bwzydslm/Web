@@ -10,31 +10,7 @@
  * ---------------------------------------------------------------------------
  */
 
-/** 从请求里取口令：优先 Authorization: Bearer，其次 X-Site-Token 头 */
-function tokenFrom(request, url) {
-  const auth = request.headers.get('authorization') || '';
-  if (auth.toLowerCase().startsWith('bearer ')) return auth.slice(7).trim();
-  return request.headers.get('x-site-token') || url.searchParams.get('token') || '';
-}
-
-/** 定长比较，避免通过响应时间猜口令 */
-function safeEqual(a, b) {
-  if (typeof a !== 'string' || typeof b !== 'string') return false;
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return diff === 0;
-}
-
-/**
- * ★ 重要：SITE_TOKEN 没配置时，一律拒绝写操作（fail closed）。
- *   这样即使你忘了配，也不会出现「谁都能上传」的裸奔状态。
- */
-export function isAuthorized(request, env, url) {
-  const expected = env.SITE_TOKEN || '';
-  if (!expected) return false;
-  return safeEqual(tokenFrom(request, url), expected);
-}
+import { isAuthorized } from './_lib/auth.js';
 
 export async function onRequest(context) {
   const { request, env, next } = context;

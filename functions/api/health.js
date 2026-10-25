@@ -9,18 +9,7 @@
  * ---------------------------------------------------------------------------
  */
 
-function isAuthorized(request, env, url) {
-  const expected = env.SITE_TOKEN || '';
-  if (!expected) return false;
-  const auth = request.headers.get('authorization') || '';
-  const got = auth.toLowerCase().startsWith('bearer ')
-    ? auth.slice(7).trim()
-    : request.headers.get('x-site-token') || url.searchParams.get('token') || '';
-  if (got.length !== expected.length) return false;
-  let diff = 0;
-  for (let i = 0; i < got.length; i++) diff |= got.charCodeAt(i) ^ expected.charCodeAt(i);
-  return diff === 0;
-}
+import { isAuthorized } from '../_lib/auth.js';
 
 export async function onRequestGet({ request, env }) {
   const url = new URL(request.url);

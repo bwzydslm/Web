@@ -17,18 +17,39 @@
  * ---------------------------------------------------------------------------
  */
 
+import { isAuthorized, errorBody } from '../_lib/auth.js';
+
 const json = (data, status = 200, cache) =>
   new Response(JSON.stringify(data), {
     status,
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
-      /* 首页数据可以短缓存：换页回来不用再请求（最多旧 20 秒） */
-      'Cache-Control': cache || 'public, max-age=20, stale-while-revalidate=120',
+      /* max-age=20    → 浏览器最多用 20 秒内的旧数据（换页回来不发请求）
+         s-maxage=60   → Cloudflare 边缘最多缓存 60 秒（缓存未命中时不用再打 LAX 查 D1）
+         swr=240       → 过期后先回旧值，后台悄悄刷新
+         代价：后台管理上传新图后，首页统计最多晚 60 秒更新（浏览器侧仍是 20 秒）。 */
+      'Cache-Control': cache || 'public, max-age=20, s-maxage=60, stale-while-revalidate=240',
     },
   });
 
-export async function onRequestGet({ env }) {
+export async function onRequestGet(context) {
+  const { request, env } = context;
+
   if (!env.DB) return json({ ok: false, error: 'db_not_bound', message: 'D1 绑定 DB 没有配置' }, 500, 'no-store');
+
+  /* 边缘缓存：首页数据对所有人相同，命中后直接从该colo出，不再跨洋查 D1。
+     写法与 file/[[key]].js 一致；Range 不涉及，key 固定为 /__home。 */
+  const cache = typeof caches !== 'undefined' && caches.default ? caches.default : null;
+  const cacheKey = cache ? new Request(new URL(request.url).origin + '/__home') : null;
+
+  if (cache && cacheKey) {
+    try {
+      const hit = await cache.match(cacheKey);
+      if (hit) return hit;
+    } catch (e) {
+      /* 缓存读取失败不影响正常流程 */
+    }
+  }
 
   try {
     /* 三个查询一次往返（D1 batch） */
@@ -46,7 +67,7 @@ export async function onRequestGet({ env }) {
     const rows = (recentRes && recentRes.results) || [];
     const noteRow = noteRes && noteRes.results && noteRes.results[0];
 
-    return json({
+    const res = json({
       ok: true,
       total: stat.total || 0,
       bytes: stat.bytes || 0,
@@ -70,16 +91,22 @@ export async function onRequestGet({ env }) {
           }
         : null,
     });
+
+    /* 回填边缘缓存：只缓存成功的 200 */
+    if (cache && cacheKey) {
+      try {
+        const put = cache.put(cacheKey, res.clone());
+        if (typeof context.waitUntil === 'function') context.waitUntil(put);
+        else await put.catch(function () {});
+      } catch (e) {
+        /* 缓存失败不影响正常返回 */
+      }
+    }
+
+    return res;
   } catch (e) {
-    return json(
-      {
-        ok: false,
-        error: 'query_failed',
-        message: e && e.message ? e.message : String(e),
-        hint: '如果提示 no such table，说明要重新执行一次 schema.sql',
-      },
-      500,
-      'no-store'
-    );
+    /* 匿名访客只看到笼统提示 */
+    const authed = isAuthorized(context.request, env, new URL(context.request.url));
+    return json(errorBody(authed, 'query_failed', e, '如果提示 no such table，说明要重新执行一次 schema.sql'), 500, 'no-store');
   }
 }

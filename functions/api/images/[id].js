@@ -7,6 +7,8 @@
  * ---------------------------------------------------------------------------
  */
 
+import { isAuthorized } from '../../_lib/auth.js';
+
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), {
     status,
@@ -14,19 +16,6 @@ const json = (data, status = 200) =>
   });
 
 const str = (v, max = 300) => String(v == null ? '' : v).trim().slice(0, max);
-
-function isAuthorized(request, env, url) {
-  const expected = env.SITE_TOKEN || '';
-  if (!expected) return false;
-  const auth = request.headers.get('authorization') || '';
-  const got = auth.toLowerCase().startsWith('bearer ')
-    ? auth.slice(7).trim()
-    : request.headers.get('x-site-token') || url.searchParams.get('token') || '';
-  if (got.length !== expected.length) return false;
-  let diff = 0;
-  for (let i = 0; i < got.length; i++) diff |= got.charCodeAt(i) ^ expected.charCodeAt(i);
-  return diff === 0;
-}
 
 function toItem(row) {
   return {

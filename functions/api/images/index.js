@@ -9,6 +9,8 @@
  * ---------------------------------------------------------------------------
  */
 
+import { isAuthorized, errorBody } from '../../_lib/auth.js';
+
 const MAX_LIMIT = 100;
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), {
@@ -54,13 +56,8 @@ export async function onRequestGet({ request, env }) {
   const offset = Math.max(0, int(p.get('offset'), 0));
 
   /* 私密图片只有在带正确口令（all=1）时才一起返回 */
-  let includePrivate = false;
-  if (p.get('all') === '1') {
-    const expected = env.SITE_TOKEN || '';
-    const auth = request.headers.get('authorization') || '';
-    const got = auth.toLowerCase().startsWith('bearer ') ? auth.slice(7).trim() : '';
-    includePrivate = !!expected && got === expected;
-  }
+  const includePrivate =
+    p.get('all') === '1' && isAuthorized(request, env, new URL(request.url));
 
   const where = [];
   const binds = [];
@@ -105,13 +102,10 @@ export async function onRequestGet({ request, env }) {
       offset,
     });
   } catch (e) {
+    /* 匿名访客只看到笼统提示，别把 D1 原始报错（表名/SQL）漏出去 */
+    const authed = isAuthorized(request, env, new URL(request.url));
     return json(
-      {
-        ok: false,
-        error: 'query_failed',
-        message: e && e.message ? e.message : String(e),
-        hint: '如果提示 no such table: images，说明还没执行 schema.sql',
-      },
+      errorBody(authed, 'query_failed', e, '如果提示 no such table: images，说明还没执行 schema.sql'),
       500
     );
   }

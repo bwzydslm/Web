@@ -14,6 +14,8 @@
  * ---------------------------------------------------------------------------
  */
 
+import { isAuthorized, errorBody } from '../../_lib/auth.js';
+
 const MAX_NAME = 24;
 const MAX_CONTENT = 500;
 const MAX_CONTACT = 80;
@@ -40,19 +42,7 @@ function toItem(row, withContact) {
   return item
 }
 
-/** 判断请求是否带了对的口令（只有管理员才看得到 contact） */
-function isAuthorized(request, env, url) {
-  const expected = env.SITE_TOKEN || '';
-  if (!expected) return false;
-  const auth = request.headers.get('authorization') || '';
-  const got = auth.toLowerCase().startsWith('bearer ')
-    ? auth.slice(7).trim()
-    : request.headers.get('x-site-token') || url.searchParams.get('token') || '';
-  if (got.length !== expected.length) return false;
-  let diff = 0;
-  for (let i = 0; i < got.length; i++) diff |= got.charCodeAt(i) ^ expected.charCodeAt(i);
-  return diff === 0;
-}
+/** 判断请求是否带了对的口令（只有管理员才看得到 contact）——实现在 _lib/auth.js */
 
 /** IP → 哈希；盐用 SITE_TOKEN，换个口令所有哈希都会变 */
 async function hashIp(request, env) {
@@ -92,13 +82,10 @@ export async function onRequestGet({ request, env }) {
 
     return json({ ok: true, items, total, limit, offset });
   } catch (e) {
+    /* 匿名访客只看到笼统提示 */
+    const authed = isAuthorized(request, env, new URL(request.url));
     return json(
-      {
-        ok: false,
-        error: 'query_failed',
-        message: e && e.message ? e.message : String(e),
-        hint: '如果提示 no such table: messages，去 D1 控制台执行一次 schema.sql 里的 messages 建表语句',
-      },
+      errorBody(authed, 'query_failed', e, '如果提示 no such table: messages，去 D1 控制台执行一次 schema.sql 里的 messages 建表语句'),
       500
     );
   }
@@ -179,13 +166,9 @@ export async function onRequestPost({ request, env }) {
 
     return json({ ok: true, item: { id, name, content, contact, ts: now } });
   } catch (e) {
+    /* 留言板是匿名入口，原始报错绝不外漏；hint 本身不含敏感信息，保留给排查用 */
     return json(
-      {
-        ok: false,
-        error: 'insert_failed',
-        message: e && e.message ? e.message : String(e),
-        hint: '如果提示 no such table: messages，去 D1 控制台执行一次建表语句',
-      },
+      errorBody(false, 'insert_failed', e, '如果提示 no such table: messages，去 D1 控制台执行一次建表语句'),
       500
     );
   }

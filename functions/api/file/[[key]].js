@@ -18,18 +18,7 @@
  * ---------------------------------------------------------------------------
  */
 
-function isAuthorized(request, env, url) {
-  const expected = env.SITE_TOKEN || '';
-  if (!expected) return false;
-  const auth = request.headers.get('authorization') || '';
-  const got = auth.toLowerCase().startsWith('bearer ')
-    ? auth.slice(7).trim()
-    : request.headers.get('x-site-token') || url.searchParams.get('token') || '';
-  if (got.length !== expected.length) return false;
-  let diff = 0;
-  for (let i = 0; i < got.length; i++) diff |= got.charCodeAt(i) ^ expected.charCodeAt(i);
-  return diff === 0;
-}
+import { isAuthorized } from '../../_lib/auth.js';
 
 /** 从 R2 取对象并组装响应（含 Range / 304 / HEAD） */
 async function fromBucket(env, key, request) {
@@ -51,6 +40,11 @@ async function fromBucket(env, key, request) {
   headers.set('etag', obj.httpEtag);
   headers.set('Accept-Ranges', 'bytes');
   headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+  /* 安全头：public/_headers 只对静态资源生效，管不到 Functions 响应，这里得自己加。
+     nosniff 防浏览器猜 MIME；CSP sandbox 让 SVG/HTML 被直接打开时脚本不执行
+     （以 <img>/<audio> 嵌入时不受影响 —— 嵌入资源不应用自身响应的 CSP）。 */
+  headers.set('X-Content-Type-Options', 'nosniff');
+  headers.set('Content-Security-Policy', "default-src 'none'; sandbox");
 
   /* 206 Partial Content */
   if (rangeHeader && obj.range) {

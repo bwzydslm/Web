@@ -10,24 +10,13 @@
  * ---------------------------------------------------------------------------
  */
 
+import { isAuthorized, errorBody } from '../../_lib/auth.js';
+
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), {
     status,
     headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' },
   });
-
-function isAuthorized(request, env, url) {
-  const expected = env.SITE_TOKEN || '';
-  if (!expected) return false;
-  const auth = request.headers.get('authorization') || '';
-  const got = auth.toLowerCase().startsWith('bearer ')
-    ? auth.slice(7).trim()
-    : request.headers.get('x-site-token') || url.searchParams.get('token') || '';
-  if (got.length !== expected.length) return false;
-  let diff = 0;
-  for (let i = 0; i < got.length; i++) diff |= got.charCodeAt(i) ^ expected.charCodeAt(i);
-  return diff === 0;
-}
 
 function toTrack(row) {
   return {
@@ -65,13 +54,10 @@ export async function onRequestGet({ request, env }) {
     const res = await env.DB.prepare(sql).all();
     return json({ ok: true, items: (res.results || []).map(toTrack) });
   } catch (e) {
+    /* 匿名访客只看到笼统提示，别把 D1 原始报错漏出去 */
+    const authed = isAuthorized(request, env, url);
     return json(
-      {
-        ok: false,
-        error: 'query_failed',
-        message: e && e.message ? e.message : String(e),
-        hint: '如果提示 no such table: tracks，去 D1 控制台重新执行一次 schema.sql',
-      },
+      errorBody(authed, 'query_failed', e, '如果提示 no such table: tracks，去 D1 控制台重新执行一次 schema.sql'),
       500
     );
   }
