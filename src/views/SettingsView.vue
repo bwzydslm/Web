@@ -74,6 +74,23 @@ const apiBase = ref('')
 const apiToken = ref('')
 const apiStatus = ref('')
 
+/* 粘贴口令时的隐形陷阱，这两个肉眼几乎看不出来：
+   · 从别处复制常把 "Bearer " 前缀一起带进来 → 发出去成了 "Bearer Bearer xxx"
+   · 密码管理器/面板可能带首尾空格或换行
+   统一在这里清掉，服务端那边也做了同样的兜底。 */
+function normalizeToken(raw) {
+  return String(raw == null ? '' : raw).trim().replace(/^bearer\s+/i, '').trim()
+}
+
+/* 仍然可能有问题的输入：全角字符（中文输入法打的）、中间夹空格 */
+const tokenWarning = computed(() => {
+  const v = String(apiToken.value || '')
+  if (!v) return ''
+  if (/[\u3000-\u303f\uff01-\uff60]/.test(v)) return '⚠ 口令里有全角字符，可能是中文输入法打出来的'
+  if (/\s/.test(v.trim())) return '⚠ 口令中间有空格'
+  return ''
+})
+
 function paintApiStatus() {
   const c = Api.conf()
   apiBase.value = c.base
@@ -86,7 +103,7 @@ function paintApiStatus() {
 const testing = ref(false)
 
 async function testConnection() {
-  Api.save({ base: apiBase.value.trim(), token: apiToken.value.trim() })
+  Api.save({ base: apiBase.value.trim(), token: normalizeToken(apiToken.value) })
   testing.value = true
   apiStatus.value = '正在检测…'
   try {
@@ -108,7 +125,9 @@ async function testConnection() {
 }
 
 function saveApi() {
-  Api.save({ base: apiBase.value.trim(), token: apiToken.value.trim() })
+  const token = normalizeToken(apiToken.value)
+  Api.save({ base: apiBase.value.trim(), token })
+  apiToken.value = token
   toast('已保存服务端配置', 'success')
   paintApiStatus()
 }
@@ -132,7 +151,7 @@ function setUnlocked(on) {
 }
 
 async function tryUnlock() {
-  const value = gateInput.value.trim()
+  const value = normalizeToken(gateInput.value)
   if (!value) { gateStatus.value = '请输入口令'; return }
 
   verifying.value = true
@@ -484,6 +503,7 @@ onMounted(() => {
           </div>
           <div class="row__ctrl" style="min-width:280px">
             <input v-model="apiToken" class="input" type="password" placeholder="粘贴你的 SITE_TOKEN">
+            <div v-if="tokenWarning" class="row__desc" style="color:var(--danger,#e24b4a);margin-top:6px">{{ tokenWarning }}</div>
           </div>
         </div>
 

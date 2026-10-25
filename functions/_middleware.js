@@ -10,7 +10,7 @@
  * ---------------------------------------------------------------------------
  */
 
-import { isAuthorized } from './_lib/auth.js';
+import { isAuthorized, tokenFrom, expectedToken } from './_lib/auth.js';
 
 export async function onRequest(context) {
   const { request, env, next } = context;
@@ -28,15 +28,21 @@ export async function onRequest(context) {
   const isPublicWrite = method === 'POST' && path === '/api/messages';
 
   if (isWrite && !isPublicWrite && !isAuthorized(request, env, url)) {
-    const configured = !!env.SITE_TOKEN;
+    /* 三种失败原因分开说。原来只有「口令不正确」一句，
+       导致「云端压根没配」「客户端没带」「值不一致」看起来一模一样，
+       排查时只能盲猜。现在按实际情况给不同的 error 码和提示。 */
+    const configured = expectedToken(env).length > 0;
+    const sent = tokenFrom(request, url).length > 0;
+
+    const error = !configured ? 'token_not_configured' : sent ? 'token_mismatch' : 'token_missing';
+    const message = !configured
+      ? '云端还没有配置 SITE_TOKEN 环境变量，写操作已被拒绝（这是安全默认值）。'
+      : sent
+        ? '口令与云端 SITE_TOKEN 不一致。请确认两边完全相同：不要带空格、换行，也不要连 "Bearer " 一起粘。'
+        : '这个请求没有带上口令。请到「设置 → 服务端 / API」填好 SITE_TOKEN（换过浏览器或清过缓存后需要重新填）。';
+
     return new Response(
-      JSON.stringify({
-        ok: false,
-        error: configured ? 'unauthorized' : 'token_not_configured',
-        message: configured
-          ? '口令不正确：请在「设置 → 服务端 / API」里填写与云端 SITE_TOKEN 一致的口令。'
-          : '云端还没有配置 SITE_TOKEN 环境变量，写操作已被拒绝（这是安全默认值）。',
-      }),
+      JSON.stringify({ ok: false, error, message }),
       { status: 401, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' } }
     );
   }
