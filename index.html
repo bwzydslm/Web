@@ -13,7 +13,10 @@
 
   <!--
     首帧初始化：赶在浏览器画第一帧前决定明暗、侧栏状态和强调色，避免闪烁。
-    必须是普通外链脚本（CSP 的 script-src 'self' 会拦内联脚本），且必须同步执行。
+    下面这个外链标签只是「占位」——构建（和 dev）时会被 vite.config.js 的
+    inlineBootTheme 插件替换成 src/boot-theme.js 的内联内容，
+    这样首屏不必为了一个 2.8KB 的小文件多跑一个跨境往返。
+    内联后 CSP 仍不放宽：script-src 里写的是这份脚本的 sha256，由构建期写入。
   -->
   <script src="/assets/js/boot-theme.js"></script>
 </head>

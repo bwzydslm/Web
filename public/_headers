@@ -8,6 +8,9 @@
 # ---------- 安全头：所有文件 ----------
 # CSP 说明（注意：注释必须写在 /* 块外面，写进去会被当成非法头）：
 #   script-src 'self'      → 禁止内联脚本和外部脚本
+#   script-src 的 sha256   → 首帧脚本 boot-theme 是内联的，靠构建期算出的 hash 放行。
+#                            __BOOT_THEME_HASH__ 是占位符，构建结束前会被替换成真实值
+#                            （见 vite.config.js 的 inlineBootTheme 插件，占位缺失会构建失败）
 #   style-src 允许 inline  → 页面里大量 style="..." 属性依赖它
 #   img-src 允许 blob:     → 上传页的图片预览用的是 blob URL
 #   connect-src 'self'     → 只允许请求本站 API；若把 API 放到别的域名要加进来
@@ -17,7 +20,7 @@
   X-Frame-Options: SAMEORIGIN
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: geolocation=(), microphone=(), camera=(), interest-cohort=()
-  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-src https://music.163.com; object-src 'none'; base-uri 'none'; frame-ancestors 'self'
+  Content-Security-Policy: default-src 'self'; script-src 'self' '__BOOT_THEME_HASH__'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-src https://music.163.com; object-src 'none'; base-uri 'none'; frame-ancestors 'self'
 
 # ---------- 页面：不缓存 ----------
 # 作用：改完 HTML 推送后，访客刷新就能拿到新版，不会看到几天前的旧页面。

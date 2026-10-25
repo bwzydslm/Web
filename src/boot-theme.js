@@ -7,7 +7,11 @@
  *    · 强调色     → 否则会先闪一下 CSS 里写死的默认紫色
  *    · 透明/无
  *
- *  ⚠ 必须是普通外链脚本：CSP 的 script-src 'self' 会拦截内联脚本。
+ *  ⚠ 这个文件不会被单独发布：构建时由 vite.config.js 的 inlineBootTheme
+ *    插件整段内联进 index.html 的 <head>。
+ *    原因：外链会让首屏多一个跨境往返（服务器在 LAX），而它必须同步跑完
+ *    才能画第一帧，是最不该排队的一环。
+ *    内联后 CSP 依然严格：script-src 里写的是本文件的 sha256（构建期生成）。
  *  ⚠ 默认值和 src/config.js 保持一致：
  *    theme.defaultMode ↔ DEFAULT_MODE，theme.defaultCollapsed ↔ DEFAULT_COLLAPSED
  * ==========================================================================*/
