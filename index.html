@@ -6,6 +6,14 @@
   <title>啊巴啊巴(～o￣3￣)～</title>
   <meta name="description" content="个人主页：图片墙、上传与设置，一个安静的私人空间。">
   <link rel="icon" href="/assets/img/favicon.svg">
+
+  <!--
+    字体在小米官方 CDN 上（MiSans 的 woff2 切片）。
+    提前建连，等 JS 那边异步拉字体时就不用再花一次握手时间。
+    crossorigin 是因为字体请求走 CORS（对方返回了 Access-Control-Allow-Origin: *）。
+  -->
+  <link rel="preconnect" href="https://cdn-file.hyperos.mi.com" crossorigin>
+
   <!--
     样式不在这里引：它由 src/main.js 通过 import 引入，
     构建后 Vite 会自动往 <head> 注入 <link>，且文件名带 hash。

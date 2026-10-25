@@ -26,8 +26,11 @@
      没放文件时会静默退回后面的等宽字体，不影响显示 */
   --pixel: 'PixelFont', ui-monospace, 'Cascadia Mono', Consolas, monospace;
 
-  /* 正文用的字体。想「全站都用像素字体」就把下面这行改成： var(--pixel) */
-  --font-text: 'Inter', 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, -apple-system, sans-serif;
+  /* 正文用的字体。想「全站都用像素字体」就把下面这行改成： var(--pixel)
+     MiSans VF 是小米的可变字体（免费商用），切片表在 src/fonts/misans-vf.css，
+     字体文件从小米官方 CDN 取；缺字或加载失败会自动落到后面的系统字体。
+     放在最前面是有意的：Latin 和中文用同一套字形，中英混排不会突然变脸。 */
+  --font-text: 'MiSans VF', 'Inter', 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, -apple-system, sans-serif;
 }
 
 html[data-theme='dark'] {
@@ -804,6 +807,8 @@ html.no-glow .hero { box-shadow: none !important; }
 }
 .footer__left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .footer__right { display: flex; align-items: center; gap: 6px; }
+/* 字体署名：履行 MiSans 许可协议的注明义务，视觉上压到最弱，不抢眼 */
+.footer__credit { opacity: 0.55; }
 
 /* --------------------------------------------------------------- 提示条 */
 .toast-host { position: fixed; right: 22px; bottom: 22px; z-index: 90; display: flex; flex-direction: column; gap: 9px; }

@@ -11,6 +11,8 @@ const f = config.footer
     <div class="footer__left">
       <span>{{ f.text || '' }}</span>
       <span v-if="f.note" class="footer__note">· {{ f.note }}</span>
+      <!-- 字体署名：MiSans 许可协议要求在软件中注明，别顺手删掉 -->
+      <span v-if="f.credit" class="footer__note footer__credit">· {{ f.credit }}</span>
     </div>
     <div class="footer__right">
       <a

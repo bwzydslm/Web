@@ -56,6 +56,9 @@ export default {
   footer: {
     text: ' Amoyba的小屋',
     note: 'D老师独家赞助',
+    /* 《MiSans 字体知识产权许可协议》要求：使用方须在软件中特别注明使用了 MiSans 字体。
+       这行是履行该条款，不是装饰 —— 除非换成自有的字体，否则别删。 */
+    credit: '字体 MiSans · 小米',
     social: [
       { label: 'GitHub',   icon: 'github',   href: 'https://github.com/bwzydslm' },
       { label: 'Bilibili', icon: 'bilibili', href: 'https://space.bilibili.com/1155182580' },
