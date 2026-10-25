@@ -34,23 +34,31 @@ export default {
     { id: 'settings', label: '设置',   en: 'SETTINGS', icon: 'settings', to: '/settings', title: '设置',   desc: '按你的习惯调整一切' },
   ],
 
-  /* ---------- 顶栏右侧按钮 ---------- */
+  /* ---------- 顶栏右侧按钮 ----------
+   * 只放「确定能打开」的链接。这里曾经有两个占位：
+   *   · 邮箱是 mailto:you@example.com，点开是发给 example.com 的死信
+   *   · GitHub 指向 github.com 首页，不是仓库
+   * 两者都会随构建上线，属于访客直接能点到的坏链接，已删除/改正。
+   *
+   * ⚠ 别把真实邮箱写死在这：config.js 原样进构建产物，等于公开挂在网上。
+   *   真要放联系方式，用一个一次性别名，或者直接引导到 /guestbook。
+   */
   topbarActions: [
-    { label: 'GitHub', icon: 'github', href: 'https://github.com/' },
-    { label: '邮箱',   icon: 'mail',   href: 'mailto:you@example.com' },
+    { label: 'GitHub', icon: 'github', href: 'https://github.com/bwzydslm/Web' },
   ],
   showSearch: true,
   searchPlaceholder: '搜索图墙 / 标签 / 描述…',
 
-  /* ---------- 页脚 ---------- */
+  /* ---------- 页脚 ----------
+   * 同上，只保留真实存在的链接。Instagram 原本是 href: '#'（点了没反应），已移除；
+   * 以后补回来记得写完整地址。
+   */
   footer: {
     text: ' Amoyba的小屋',
     note: 'D老师独家赞助',
     social: [
-      { label: 'GitHub',    icon: 'github',    href: 'https://github.com/bwzydslm' },
-      { label: 'Instagram', icon: 'instagram', href: '#' },
-      { label: 'Bilibili',  icon: 'bilibili',  href: 'https://space.bilibili.com/1155182580' },
-      { label: '邮箱',      icon: 'mail',      href: 'mailto:you@example.com' },
+      { label: 'GitHub',   icon: 'github',   href: 'https://github.com/bwzydslm' },
+      { label: 'Bilibili', icon: 'bilibili', href: 'https://space.bilibili.com/1155182580' },
     ],
   },
 

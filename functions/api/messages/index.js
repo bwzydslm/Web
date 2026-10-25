@@ -141,7 +141,8 @@ export async function onRequestPost({ request, env }) {
         );
       }
 
-      /* ② 每小时上限 */
+      /* ② 每小时上限：recent.c 是「插入前」本小时已有的条数，
+         已经满 10 条就必须拒（用 >=，写 > 会放过第 11 条） */
       const hourAgo = now - 3600 * 1000;
       const recent = await env.DB.prepare(
         'SELECT COUNT(*) AS c FROM messages WHERE ip_hash = ? AND created_at > ?'
@@ -149,7 +150,7 @@ export async function onRequestPost({ request, env }) {
         .bind(ipHash, hourAgo)
         .first();
 
-      if (recent && recent.c > HOURLY_LIMIT) {
+      if (recent && recent.c >= HOURLY_LIMIT) {
         return json(
           { ok: false, error: 'rate_limited', message: '一小时内留言太多了，休息一下再来' },
           429

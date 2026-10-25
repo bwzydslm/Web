@@ -108,15 +108,18 @@ export async function onRequestDelete({ env, params }) {
   if (!row) return json({ ok: false, error: 'not_found' }, 404);
 
   try {
-    /* 先删数据库记录，再删对象；对象删失败不影响用户看到的结果 */
-    await env.DB.prepare('DELETE FROM images WHERE id = ?').bind(params.id).run();
+    /* 顺序：先删 R2 对象，再删 D1 记录 —— 和 tracks 的删除保持一致。
+     *
+     * 为什么是这个顺序：两步都是幂等的，但失败后的后果不对称。
+     *   · 先删对象、后删记录若失败 → 记录还在，文件没了；前端会报错，
+     *     用户重试一次就收敛（R2 删不存在的 key 不报错，D1 再删一次即可）。
+     *   · 反过来先删记录若对象删失败 → 记录没了、对象成孤儿，
+     *     此后再没有任何线索能找到它，只能堆积占用存储。
+     * 所以宁可留一条「看得见、可重试」的残记录，也不要留「看不见、找不回」的孤儿对象。 */
     if (env.BUCKET && row.r2_key) {
-      try {
-        await env.BUCKET.delete(row.r2_key);
-      } catch (e) {
-        return json({ ok: true, warning: 'record_deleted_but_object_failed: ' + (e.message || e) });
-      }
+      await env.BUCKET.delete(row.r2_key);
     }
+    await env.DB.prepare('DELETE FROM images WHERE id = ?').bind(params.id).run();
     return json({ ok: true, id: params.id, key: row.r2_key });
   } catch (e) {
     return json({ ok: false, error: 'delete_failed', message: e && e.message ? e.message : String(e) }, 500);

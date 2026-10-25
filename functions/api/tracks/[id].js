@@ -104,12 +104,11 @@ export async function onRequestDelete({ env, params }) {
     const row = await env.DB.prepare('SELECT r2_key FROM tracks WHERE id = ?').bind(id).first();
     if (!row) return json({ ok: false, error: 'not_found' }, 404);
 
+    /* 先删对象、再删记录，理由同 images/[id].js：
+       让失败停在「记录还在」这一步 —— 前端会报错，重试即可收敛。
+       这里不能吞掉 R2 的错误：吞掉再删记录，对象就成了再也找不回的孤儿。 */
     if (env.BUCKET && row.r2_key) {
-      try {
-        await env.BUCKET.delete(row.r2_key);
-      } catch (e) {
-        /* 文件删不掉也别挡住记录删除，否则会卡住一个永远删不掉的条目 */
-      }
+      await env.BUCKET.delete(row.r2_key);
     }
 
     await env.DB.prepare('DELETE FROM tracks WHERE id = ?').bind(id).run();
