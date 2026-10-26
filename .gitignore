@@ -25,3 +25,10 @@ HANDOFF.md
 
 # 本工作区的记忆/会话数据：属于本地工具产物，不进公开仓库
 .workbuddy/
+
+# 网易云中转（ne-relay/）是独立的 Cloudflare Pages 项目，有自己的一套函数与部署
+# 流程，刻意与主站分开管理，不并入本仓库。
+ne-relay/
+
+# npm 临时缓存（把 --cache 指到工作区里时会产生）
+.npm-cache/

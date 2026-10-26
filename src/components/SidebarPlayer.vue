@@ -32,6 +32,14 @@ onMounted(() => {
 
 const title = computed(() => (hasTrack.value ? currentTrack.value.name : '未在播放'))
 
+/* 侧栏封面跟着当前曲目走，没有曲目封面才退回歌单封面 */
+const cover = computed(() => {
+  const t = currentTrack.value
+  if (t && t.cover) return t.cover
+  const p = music.playlist
+  return (p && p.cover) || ''
+})
+
 const sub = computed(() => {
   if (!hasTrack.value) return music.loading ? '载入中…' : '点播放开始'
   return currentTrack.value.artist || '未知歌手'
@@ -54,7 +62,7 @@ function onSeek(sec) {
     <!-- 展开态 -->
     <div class="sp__row">
       <div class="mini-card__cover sp__cover">
-        <img v-if="music.playlist && music.playlist.cover" :src="music.playlist.cover" alt="">
+        <img v-if="cover" :src="cover" alt="">
         <AppIcon v-else name="music" :size="18" />
       </div>
 

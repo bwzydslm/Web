@@ -15,14 +15,25 @@
 #   img-src 允许 blob:     → 上传页的图片预览用的是 blob URL
 #   font-src 加小米 CDN    → MiSans 的 woff2 切片从小米官方 CDN 加载
 #                            （切片清单见 src/fonts/misans-vf.css）
-#   connect-src 'self'     → 只允许请求本站 API；若把 API 放到别的域名要加进来
+#   connect-src 'self'     → 只允许请求本站 API；
+#                            加 https://wyydl.pages.dev 是因为在线曲库的
+#                            搜索/歌词/直链都打这个中转（见 ne-relay/README.md）。
+#                            换了中转域名要同步改这里，否则表现是「搜索一直转圈、
+#                            控制台报 CSP 拒绝」，很难一眼看出是头的问题。
+#   media-src              → 音频从网易云 CDN 直接拉（*.music.126.net），
+#                            不经过中转，所以这里必须放行它而不是中转域名。
+#                            另外两个 meting 镜像是「最后兜底」：中转拿不到
+#                            直链时，<audio> 的 src 会直接指向镜像，由它 302
+#                            跳到 CDN（见 src/lib/online.js 的 METING_FALLBACKS）。
+#                            不放行的话表现为「歌能搜到、点了没声音」，控制台
+#                            报 CSP 拒绝 media —— 很难联想到是头的问题。
 #   frame-src              → 允许嵌入哪些站点的 iframe（目前放行网易云外链播放器）
 /*
   X-Content-Type-Options: nosniff
   X-Frame-Options: SAMEORIGIN
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: geolocation=(), microphone=(), camera=(), interest-cohort=()
-  Content-Security-Policy: default-src 'self'; script-src 'self' '__BOOT_THEME_HASH__'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data: https://cdn-file.hyperos.mi.com; connect-src 'self'; frame-src https://music.163.com; object-src 'none'; base-uri 'none'; frame-ancestors 'self'
+  Content-Security-Policy: default-src 'self'; script-src 'self' '__BOOT_THEME_HASH__'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.music.126.net https://api.qijieya.cn https://api.injahow.cn; font-src 'self' data: https://cdn-file.hyperos.mi.com; connect-src 'self' https://wyydl.pages.dev https://api.qijieya.cn https://api.injahow.cn; media-src 'self' blob: https://*.music.126.net https://api.qijieya.cn https://api.injahow.cn; frame-src https://music.163.com; object-src 'none'; base-uri 'none'; frame-ancestors 'self'
 
 # ---------- 页面：不缓存 ----------
 # 作用：改完 HTML 推送后，访客刷新就能拿到新版，不会看到几天前的旧页面。

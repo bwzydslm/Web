@@ -48,6 +48,7 @@ Cloudflare Pages：
 | 侧栏、顶栏、页脚 | `src/components/` |
 | 配色、圆角、间距 | `src/style.css` 顶部的 `:root` 变量 |
 | 音乐歌单 | `public/music/playlist.json` |
+| 网易云在线曲库 | 本地 `server/netease-proxy.mjs`；线上 `ne-relay/`（独立 Pages 项目，见下方） |
 
 加页面：建 `src/views/Xxx.vue` → `src/router.js` 加一条路由 → `src/config.js` 的 `nav` 加一项。
 
@@ -66,7 +67,46 @@ src/
 
 public/                 _headers、_redirects、_routes.json、assets、music
 functions/              后端 API（Pages Functions）
+server/                 本地开发用：网易云中转（仅本机跑，不部署）
+ne-relay/               线上用的网易云中转（独立 Pages 项目，不进本仓库）
 ```
+
+---
+
+## 网易云在线曲库
+
+音乐页的搜索框可以直接搜网易云曲库。网易云的接口不允许浏览器跨域，播放地址又是
+20 分钟就过期的临时直链，必须每次现取，所以要有一层中转。中转有两份实现，接口完全一致：
+
+| 场景 | 跑在哪 | 地址 | 怎么起 |
+| --- | --- | --- | --- |
+| 本地开发 | 本机 Node 进程 | `/ne/*`（vite 代理到 `127.0.0.1:8787`） | `npm run relay` |
+| 线上 | Cloudflare 边缘（Pages Functions） | `https://wyydl.pages.dev/api/*` | 见 `ne-relay/README.md` |
+
+`preview.bat` 已经把「起中转 + 起 dev server」一起做了。
+
+线上地址由构建时的 `VITE_RELAY_BASE` 决定，没配就回落到 `https://wyydl.pages.dev`：
+
+```bash
+VITE_RELAY_BASE=https://wyydl.pages.dev npm run build
+```
+
+几个要点：
+
+- **中转不可用也不影响用**。前端会先 `ping` 一次，探不到就把搜索退回成本地歌单过滤，
+  在线曲目一律不出现，不会报错也不会卡住。
+- **地址时效**：直链按接口给的 `expi` 打七折缓存；万一播到一半 403，会自动换一条重试，
+  最多两次。
+- **线上取不到直链怎么办**：网易云取直链的接口会按出口 IP 判地域，Cloudflare 边缘
+  全在境外，所以线上这条必然失败。中转里做了三级兜底（官方 v1 → 官方老接口 →
+  第三方 Meting 镜像），前端还有最后一层：中转彻底不可用就把 `<audio src>` 直接指向
+  镜像地址，由镜像 302 到网易云 CDN。镜像地址列表见 `src/lib/online.js` 的
+  `METING_FALLBACKS`，中转侧在 `ne-relay/functions/_lib/meting.js`。
+- **CSP**：`public/_headers` 里 `connect-src` 放行了中转域名，`media-src` / `img-src`
+  放行了 `*.music.126.net` 和两个 meting 镜像（音频和封面都从网易云 CDN 直接取，
+  不经过中转）。**改了镜像域名要同步改这里**，否则表现为「歌能搜到、点了没声音」。
+- `ne-relay/` 在 `.gitignore` 里，是独立项目，不并进本仓库。
+- 仅供个人自用，别把中转当成公开 API 分发。
 
 ---
 

@@ -106,6 +106,14 @@ export default defineConfig({
         changeOrigin: true,
         secure: true,
       },
+      /* 网易云本地中转（server/netease-proxy.mjs）。
+         前端一律按 /ne/xxx 调，这样开发和线上是同一套代码路径；
+         线上没有中转时会直接 502，前端会优雅地退回本地曲库。 */
+      '/ne': {
+        target: 'http://127.0.0.1:8787',
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/ne/, ''),
+      },
     },
   },
 })

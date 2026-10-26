@@ -26,9 +26,14 @@ import {
   fmtTime,
   setMode,
 } from '../lib/music'
+import { ensureRelay, searchOnline, toTrack } from '../lib/online'
 
 const keyword = ref('')
 const results = ref([])
+/** 在线搜索状态：'idle' | 'loading' | 'off' */
+const onlineState = ref('idle')
+/** 中转到底在不在跑（决定搜索走在线还是本地过滤） */
+const relayOn = ref(false)
 
 const tracks = computed(() => (music.playlist && music.playlist.tracks) || [])
 const isEmpty = computed(() => !music.queue.length)
@@ -36,8 +41,10 @@ const isEmpty = computed(() => !music.queue.length)
 const showing = computed(() => (keyword.value.trim() ? results.value : music.queue))
 const isSearching = computed(() => !!keyword.value.trim())
 
-onMounted(() => {
+onMounted(async () => {
   if (!music.ready) loadPlaylist()
+  relayOn.value = await ensureRelay()
+  onlineState.value = relayOn.value ? 'idle' : 'off'
 })
 
 function playAll() {
@@ -52,19 +59,59 @@ function shufflePlay() {
   playAt(Math.floor(Math.random() * music.queue.length))
 }
 
-/** 输入即搜（本地过滤，数据量小，不做防抖也够快） */
-function doSearch() {
-  const q = keyword.value.trim().toLowerCase()
-  if (!q) { results.value = []; return }
-  results.value = tracks.value.filter((t) => {
+/* ---------------- 搜索 ---------------- */
+
+let searchToken = 0
+let searchTimer = 0
+
+/** 本地过滤：中转不可用时的兜底（数据量小，不做防抖也够快） */
+function localSearch(q) {
+  const low = q.toLowerCase()
+  return tracks.value.filter((t) => {
     const hay = (t.name + ' ' + t.artist + ' ' + t.album).toLowerCase()
-    return hay.indexOf(q) !== -1
+    return hay.indexOf(low) !== -1
   })
+}
+
+function doSearch() {
+  const q = keyword.value.trim()
+  clearTimeout(searchTimer)
+  if (!q) {
+    results.value = []
+    return
+  }
+
+  if (!relayOn.value) {
+    results.value = localSearch(q)
+    return
+  }
+
+  /* 在线搜索要打网络，防抖 350ms，别每敲一个字就发一次 */
+  onlineState.value = 'loading'
+  searchTimer = setTimeout(() => runOnlineSearch(q), 350)
+}
+
+async function runOnlineSearch(q) {
+  const token = ++searchToken
+  const res = await searchOnline(q, 30, 0)
+  if (token !== searchToken) return
+
+  if (!res) {
+    /* 中转中途挂了：降级成本地过滤，别让用户对着空列表 */
+    relayOn.value = false
+    onlineState.value = 'off'
+    results.value = localSearch(q)
+    return
+  }
+
+  onlineState.value = 'idle'
+  results.value = res.items.map(toTrack)
 }
 
 function clearSearch() {
   keyword.value = ''
   results.value = []
+  searchToken++
 }
 
 /** 搜索结果里点一首：插入队列并立刻播 */
@@ -144,7 +191,10 @@ function isCurrent(t, i) {
       <aside class="card mp-side">
         <div class="card__head">
           <span class="card__title">{{ isSearching ? '搜索结果' : '播放列表' }}</span>
-          <span class="card__hint">{{ showing.length }} 首</span>
+          <span class="card__hint">
+            <template v-if="onlineState === 'loading'">搜索中…</template>
+            <template v-else>{{ showing.length }} 首{{ isSearching && relayOn ? ' · 网易云' : '' }}</template>
+          </span>
         </div>
 
         <div class="mp-side__search">
@@ -154,7 +204,7 @@ function isCurrent(t, i) {
               v-model="keyword"
               class="input mp-search__input"
               type="search"
-              placeholder="搜歌名、歌手、专辑"
+              :placeholder="relayOn ? '搜网易云曲库，或本地歌名' : '搜歌名、歌手、专辑'"
               @input="doSearch"
             >
             <button
@@ -170,7 +220,10 @@ function isCurrent(t, i) {
         <div class="card__body card__body--flush mp-side__list">
           <div v-if="isEmpty && !isSearching" class="mp-empty mp-empty--tall">
             <div class="mp-empty__title">播放列表是空的</div>
-            <div>去上传页传一首，或在设置里检查歌单来源</div>
+            <div>去上传页传一首，或直接用上面的搜索找网易云的歌</div>
+          </div>
+          <div v-else-if="onlineState === 'loading' && !showing.length" class="mp-empty">
+            正在网易云里找…
           </div>
           <div v-else-if="isSearching && !showing.length" class="mp-empty">
             没有匹配的歌曲
@@ -191,6 +244,9 @@ function isCurrent(t, i) {
                   <i /><i /><i />
                 </span>
                 <template v-else>{{ String(i + 1).padStart(2, '0') }}</template>
+              </span>
+              <span v-if="t.cover" class="mp-row__cover">
+                <img :src="t.cover" alt="" loading="lazy">
               </span>
               <span class="mp-row__main">
                 <span class="mp-row__name">{{ t.name }}</span>
@@ -431,6 +487,20 @@ function isCurrent(t, i) {
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+.mp-row__cover {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  border-radius: 6px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+}
+.mp-row__cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 .mp-row__name {
   overflow: hidden;

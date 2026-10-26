@@ -39,4 +39,9 @@ rem 延迟 3 秒再打开浏览器：Vite 起服务要一两秒，
 rem 先开浏览器会直接撞上 ERR_CONNECTION_REFUSED。
 start "" /min powershell -NoProfile -WindowStyle Hidden -Command "Start-Sleep -Seconds 3; Start-Process '%URL%'"
 
+rem 顺带把网易云中转拉起来（server\netease-proxy.mjs，端口 8787）。
+rem 它只是「能播在线曲库」的加分项：没起来也不影响本地曲库播放，
+rem 音乐页会自动退回本地过滤搜索，所以这里失败不算错误。
+start "网易云中转 :8787" /min cmd /c "node server\netease-proxy.mjs"
+
 call npm run dev

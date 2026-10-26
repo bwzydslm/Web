@@ -3,8 +3,10 @@
  *
  *  单例：整个应用共享同一份状态和同一个 <audio>，所以切页不会中断播放。
  *
- *  音频来源目前是**本地歌单**：public/music/playlist.json + 音频文件。
- *  以后再接网易云代理，只需要改 loadPlaylist() 和 track.src 的拼法。
+ *  音频来源有两种，混在同一个队列里：
+ *    1. 本地歌单 —— public/music/playlist.json + 音频文件（或 /api/tracks 的云端曲库）
+ *    2. 网易云在线 —— 经 server/netease-proxy.mjs 中转，播放时才去换一条带时效的直链
+ *  track 上带 online:true 的就是在线曲目，它的 src 是临时地址，每次播放前刷新。
  *
  *  播放模式（state.mode）：
  *    'list'    列表循环 —— 播完最后一首回到第一首
@@ -15,6 +17,7 @@
 import { computed, reactive } from 'vue'
 import Api from './api'
 import Store from './store'
+import { fetchLyric, fetchStreamUrl } from './online'
 
 const MODES = ['list', 'one', 'shuffle']
 
@@ -34,6 +37,7 @@ const state = reactive({
   index: -1,             // 当前在 queue 里的下标，-1 = 没在播
 
   playing: false,
+  resolving: false,      // 在线曲目正在取播放地址
   currentTime: 0,
   duration: 0,
   buffered: 0,           // 已缓冲到第几秒（画进度条上的浅色段）
@@ -90,6 +94,23 @@ function el() {
   })
   audio.addEventListener('error', () => {
     state.playing = false
+    state.resolving = false
+    const t = state.index >= 0 ? state.queue[state.index] : null
+    /* 在线直链会过期（网易云给的是 20 分钟临时地址）。
+       播到一半 403 时，把缓存地址丢掉、重新换一个再来一次。
+       重试时把 mirrorTry 递增：如果上一个地址是某个 meting 镜像给的，
+       换下一个镜像再试 —— 镜像本身挂了的话，同一个地址重试多少次都一样。 */
+    if (t && t.online && (t.retried || 0) < 2) {
+      t.retried = (t.retried || 0) + 1
+      t.mirrorTry = (t.mirrorTry || 0) + 1
+      t.src = ''
+      loadOnlineSource(t, true)
+      return
+    }
+    if (t && t.online) {
+      state.error = '这首音频加载失败（可能已下架或需要会员）'
+      return
+    }
     if (state.index >= 0) state.error = '这首音频加载失败（文件缺失或格式不支持）'
   })
 
@@ -246,10 +267,6 @@ function loadStaticPlaylist() {
 export function playAt(i) {
   const track = state.queue[i]
   if (!track) return
-  if (!track.src) {
-    state.error = '这首没有音频地址（playlist.json 里 src 为空）'
-    return
-  }
 
   /* 换歌前先把当前下标记进随机历史，方便「上一首」回退 */
   if (state.mode === 'shuffle' && state.index >= 0 && state.index !== i) {
@@ -259,19 +276,83 @@ export function playAt(i) {
 
   state.error = ''
   state.index = i
+  /* 每次重新点播都清零重试计数：mirrorTry 归零意味着又从第一个镜像开始试 */
+  track.retried = 0
+  track.mirrorTry = 0
   state.lyrics = parseLrc(track.lyrics)
   state.currentTime = 0
   state.duration = track.duration > 0 ? track.duration : 0
   state.buffered = 0
 
+  /* 在线曲目：地址是带时效的，播之前才去换一个新鲜的 */
+  if (track.online) {
+    loadOnlineSource(track)
+    return
+  }
+
+  if (!track.src) {
+    state.error = '这首没有音频地址（playlist.json 里 src 为空）'
+    return
+  }
+  /* 换成本地曲目时也要作废掉还在路上的在线取流请求，否则它回来会把歌抢走 */
+  onlineToken++
+  startAudio(track.src)
+}
+
+/** 把 src 交给 <audio> 并开播 */
+function startAudio(src) {
   const a = el()
-  a.src = track.src
+  state.resolving = false
+  a.src = src
   a.volume = state.volume
   a.muted = state.muted
   a.play().catch((e) => {
     state.playing = false
+    /* AbortError 是上一次 play() 被新的 src 打断，不是真故障，别弹错误 */
+    if (e && e.name === 'AbortError') return
     state.error = '播放失败：' + (e && e.message ? e.message : e)
   })
+}
+
+/**
+ * 在线曲目：并行取「直链」和「歌词」，齐了再开播。
+ *
+ * 用 token 做竞态保护 —— 用户连点几首时，先发出的请求可能后回来，
+ * 不能让它把当前这首的播放覆盖掉。
+ */
+let onlineToken = 0
+
+async function loadOnlineSource(track, force = false) {
+  const token = ++onlineToken
+  state.resolving = true
+  state.error = ''
+
+  /* 歌词取过一次就挂在曲目对象上，重播不用再请求 */
+  const needLyric = !track.lyrics
+  const [urlRes, lrc] = await Promise.all([
+    fetchStreamUrl(track.relayId, track.level || 'exhigh', force, track.mirrorTry || 0),
+    needLyric ? fetchLyric(track.relayId) : Promise.resolve(track.lyrics),
+  ])
+
+  if (token !== onlineToken) return
+
+  if (needLyric) {
+    track.lyrics = lrc || ''
+    if (state.index >= 0 && state.queue[state.index] === track) {
+      state.lyrics = parseLrc(track.lyrics)
+    }
+  }
+
+  if (!urlRes.ok) {
+    state.resolving = false
+    state.playing = false
+    state.error = urlRes.message || '这首歌暂时取不到播放地址'
+    return
+  }
+
+  track.src = urlRes.url
+  track.br = urlRes.br
+  startAudio(urlRes.url)
 }
 
 export function toggle() {

@@ -97,11 +97,13 @@ function onWheel(e) {
           </p>
 
           <div class="np__tags">
+            <span v-if="music.resolving" class="tag">获取播放地址…</span>
+            <span v-if="hasTrack && currentTrack.online" class="tag">网易云</span>
             <span v-if="hasTrack && music.lyrics.length" class="tag tag--accent">
               <AppIcon name="lyric" :size="12" />
               歌词
             </span>
-            <span v-else-if="hasTrack" class="tag">纯音乐</span>
+            <span v-else-if="hasTrack && !music.resolving" class="tag">纯音乐</span>
           </div>
         </header>
 
